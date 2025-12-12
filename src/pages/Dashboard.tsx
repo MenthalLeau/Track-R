@@ -1,54 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext.tsx';
 
-interface DashboardProps {}
+const Dashboard: React.FC = () => {
+    const { user, signOut } = useAuth();
+    const [error, setError] = useState<string | null>(null);
 
-const Dashboard: React.FC<DashboardProps> = () => {
+    const handleSignOut = async () => {
+        setError(null);
+        try {
+            await signOut();
+        } catch (err: any) {
+            setError(err.message);
+        }
+    };
+
+    const handleLoginRedirect = () => {
+        window.location.href = '/login';
+    }
+
     return (
-        <div className="dashboard">
-            <header className="dashboard-header">
-                <h1>Dashboard</h1>
-            </header>
-            
-            <div className="dashboard-content">
-                <div className="stats-grid">
-                    <div className="stat-card">
-                        <h3>Total Users</h3>
-                        <p className="stat-value">1,234</p>
-                    </div>
-                    
-                    <div className="stat-card">
-                        <h3>Revenue</h3>
-                        <p className="stat-value">$12,345</p>
-                    </div>
-                    
-                    <div className="stat-card">
-                        <h3>Active Sessions</h3>
-                        <p className="stat-value">89</p>
-                    </div>
-                    
-                    <div className="stat-card">
-                        <h3>Conversion Rate</h3>
-                        <p className="stat-value">3.2%</p>
-                    </div>
+        <div className='dashboard-container mx-auto mt-20 p-6 max-w-md bg-white rounded-lg shadow-md'>
+            <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+            {user ? (
+                <div>
+                    <p>Welcome, {user.email}!</p>
+                    <button onClick={handleSignOut} className="bg-red-500 text-white py-2 px-4 rounded">Sign Out</button>
+                    {error && <p className='error-message text-red-500'>{error}</p>}
                 </div>
-                
-                <div className="dashboard-sections">
-                    <section className="dashboard-section">
-                        <h2>Recent Activity</h2>
-                        <div className="activity-list">
-                            <p>No recent activity</p>
-                        </div>
-                    </section>
-                    
-                    <section className="dashboard-section">
-                        <h2>Quick Actions</h2>
-                        <div className="action-buttons">
-                            <button className="action-btn">Add New Item</button>
-                            <button className="action-btn">View Reports</button>
-                        </div>
-                    </section>
+            ) : (
+                <div>
+                    <p>Please log in to access your dashboard.</p>
+                    <button onClick={handleLoginRedirect} className="bg-blue-500 text-white py-2 px-4 rounded">Go to Login</button>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
