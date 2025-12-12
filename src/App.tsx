@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Home from './pages/Home.tsx';
+import RegisterPage from './pages/RegisterPage.tsx';
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
 
                     {/* Route d'authentification */}
                     <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
 
                     {/* Routes protégées (voir l'étape 3) */}
                     <Route path="/dashboard" element={<Dashboard />} />
