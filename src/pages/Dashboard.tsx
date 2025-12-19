@@ -5,8 +5,6 @@ const Dashboard: React.FC = () => {
     const { user, loading, profile, signOut } = useAuth();
     const [error, setError] = useState<string | null>(null);
 
-    console.log('User profile in Dashboard:', profile);
-
     const handleSignOut = async () => {
         setError(null);
         try {
