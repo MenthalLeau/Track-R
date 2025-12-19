@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 
 const Dashboard: React.FC = () => {
-    const { user, signOut } = useAuth();
+    const { user, profile, signOut } = useAuth();
     const [error, setError] = useState<string | null>(null);
 
     const handleSignOut = async () => {
@@ -31,6 +31,12 @@ const Dashboard: React.FC = () => {
                 <div>
                     <p>Please log in to access your dashboard.</p>
                     <button onClick={handleLoginRedirect} className="bg-blue-500 text-white py-2 px-4 rounded">Go to Login</button>
+                </div>
+            )}
+            {profile.rid > 1 && (
+                <div className="mt-6 p-4 bg-green-100 rounded">
+                    <h2 className="text-xl font-semibold mb-2">Exclusive Content</h2>
+                    <p>This content is available because your RID is greater than 1.</p>
                 </div>
             )}
         </div>
