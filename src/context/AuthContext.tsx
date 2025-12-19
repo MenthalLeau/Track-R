@@ -31,6 +31,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user || null);
+            if (session?.user) {
+                fetchProfile(session.user.id).then(profileData => {
+                    setProfile(profileData);
+            });
+            } else {
+            setProfile(null);
+            }
             setLoading(false);
         });
 
