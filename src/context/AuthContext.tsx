@@ -5,11 +5,27 @@ const AuthContext = createContext<any>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<any>(null);
+    const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
+    const fetchProfile = async (userId: string) => {
+        const { data, error } = await supabase
+            .from('profile')
+            .select('nickname, created_at, rid')
+            .eq('uid', userId)
+            .single();
+        if (error) {
+            console.error('Error fetching profile:', error);
+            return null;
+        }
+        return data;
+    }
+
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
             setUser(session?.user || null);
+            const profile = session?.user ? await fetchProfile(session.user.id) : null;
+            setProfile(profile);
             setLoading(false);
         });
 
@@ -53,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+        <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut }}>
             {children}
         </AuthContext.Provider>
     );
