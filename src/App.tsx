@@ -2,9 +2,13 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
 import Home from './pages/Home.tsx';
 import RegisterPage from './pages/RegisterPage.tsx';
+import Players from './pages/Players.tsx';
+import Games from './pages/Games.tsx';
+import Consoles from './pages/Consoles.tsx';
+import Settings from './pages/Settings.tsx';
+
 
 function App() {
     return (
@@ -15,6 +19,8 @@ function App() {
                 <Route element={<Layout />}>
                     {/* Route publique accessible à tous */}
                     <Route path="/" element={<Home />} />
+                    <Route path="/games" element={<Games />} />
+                    <Route path="/consoles" element={<Consoles />} />
 
                     {/* Route d'authentification */}
                     <Route path="/login" element={<LoginPage />} />
@@ -22,7 +28,8 @@ function App() {
 
                     {/* Routes protégées (voir l'étape 3) */}
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/players" element={<Players />} />
+                    <Route path="/settings" element={<Settings />} />
 
                     {/* Gestion d'une route 404 (optionnel) */}
                     <Route path="*" element={<div>404 - Page non trouvée</div>} />
