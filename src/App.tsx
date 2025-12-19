@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import Home from './pages/Home.tsx';
 import RegisterPage from './pages/RegisterPage.tsx';
 import Players from './pages/Players.tsx';
