@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 
 const Dashboard: React.FC = () => {
-    const { user, profile, signOut } = useAuth();
+    const { user, loading, profile, signOut } = useAuth();
     const [error, setError] = useState<string | null>(null);
+
+    console.log('User profile in Dashboard:', profile);
 
     const handleSignOut = async () => {
         setError(null);
@@ -33,10 +35,12 @@ const Dashboard: React.FC = () => {
                     <button onClick={handleLoginRedirect} className="bg-blue-500 text-white py-2 px-4 rounded">Go to Login</button>
                 </div>
             )}
-            {profile.rid > 1 && (
-                <div className="mt-6 p-4 bg-green-100 rounded">
-                    <h2 className="text-xl font-semibold mb-2">Exclusive Content</h2>
-                    <p>This content is available because your RID is greater than 1.</p>
+            {!loading && profile && (
+                <div className="profile-info mt-6 p-4 border-t">
+                    <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
+                    <p><strong>Nickname:</strong> {profile.nickname}</p>
+                    <p><strong>Member Since:</strong> {new Date(profile.created_at).toLocaleDateString()}</p>
+                    <p><strong>RID:</strong> {profile.rid}</p>
                 </div>
             )}
         </div>
