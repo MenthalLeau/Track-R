@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { createGame, fetchGames, type Game } from "../http/game";
 import { useNavigate } from "react-router-dom";
 import { GenericAdminForm } from "./GenericAdminForm";
+import { useAuth } from "../context/AuthContext";
 
 const Games = () => {
     const [games, setGames] = useState<Game[]>([]);
+    const { user } = useAuth();
 
     const navigate = useNavigate();
 
@@ -35,19 +37,24 @@ const Games = () => {
                 </ul>
             )}
         </div>
-        <GenericAdminForm
-                fields={[
-                    { name: 'name', label: 'Name', type: 'text', required: true },
-                    { name: 'description', label: 'Description', type: 'textarea' },
-                    { name: 'pegi', label: 'PEGI', type: 'number' },
-                    { name: 'image_url', label: 'Image', type: 'image' },
-                ]}
-                onSubmit={createGame}
-                onSuccess={() => {
-                    alert('Game created successfully!');
-                    navigate(0); // Simple page reload to refresh the list
-                }}
-            />  </>
+        {
+            user && user.rid === 2 && (
+                <GenericAdminForm
+                    fields={[
+                        { name: 'name', label: 'Name', type: 'text', required: true },
+                        { name: 'description', label: 'Description', type: 'textarea' },
+                        { name: 'pegi', label: 'PEGI', type: 'number' },
+                        { name: 'image_url', label: 'Image', type: 'image' },
+                    ]}
+                    onSubmit={createGame}
+                    onSuccess={() => {
+                        alert('Game created successfully!');
+                        navigate(0); // Simple page reload to refresh the list
+                    }}
+                /> 
+            )
+        }
+        </>
     );
 };
 
