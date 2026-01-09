@@ -32,20 +32,26 @@ export const fetchGameById = async (id: number): Promise<Game | null> => {
     return data || null;
 }
 
-// Fonction pour uploader l'image et retourner son URL publique
 export const uploadGameImage = async (file: File): Promise<string> => {
+    // 1. On prépare le nom du fichier (Timestamp pour l'unicité)
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `game-covers/${fileName}`;
+    const fileName = `${Date.now()}.${fileExt}`;
+    
+    // 2. On définit le chemin.
+    // Avant c'était : `game-covers/${fileName}`
+    // Maintenant, c'est juste le nom du fichier pour être à la racine :
+    const filePath = fileName; 
 
+    // 3. On upload dans le bon bucket 'game-images'
     const { error: uploadError } = await supabase.storage
-        .from('game') // Nom de votre bucket
+        .from('game-images') // <--- Nom corrigé ici
         .upload(filePath, file);
 
     if (uploadError) throw uploadError;
 
+    // 4. On récupère l'URL publique depuis le bon bucket
     const { data } = supabase.storage
-        .from('game')
+        .from('game-images') // <--- Nom corrigé ici aussi
         .getPublicUrl(filePath);
 
     return data.publicUrl;
