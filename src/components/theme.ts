@@ -17,6 +17,7 @@ export type ThemeTokens = {
         border: string;
         placeholder: string;
         focusBg: string;
+        focusBorder: string;
         icon: string;
     };
     iconButton: {
@@ -34,6 +35,11 @@ export type ThemeTokens = {
         border: string;
         hoverBorder: string;
     };
+    error: {
+        bg: string;
+        border: string;
+        text: string;
+    };
 };
 
 export const tokens: Record<Theme, ThemeTokens> = {
@@ -50,11 +56,11 @@ export const tokens: Record<Theme, ThemeTokens> = {
             inactive: "text-gray-300",
         },
         input: {
-            // J'ai ajouté backdrop-blur-xl ici
             bg: "bg-gray-800/80 backdrop-blur-xl",
             border: "border-purple-500/20",
             placeholder: "placeholder-purple-400/60",
             focusBg: "focus:bg-gray-800",
+            focusBorder: "focus:ring-2 focus:ring-purple-500/50 border",
             icon: "text-purple-400",
         },
         iconButton: {
@@ -72,13 +78,18 @@ export const tokens: Record<Theme, ThemeTokens> = {
             border: "border-purple-500/20",
             hoverBorder: "hover:border-purple-500/40",
         },
+        error: {
+            bg: "bg-red-500/20 border",
+            border: "border-red-500/30",
+            text: "text-red-300",
+        }
     },
     light: {
         layout: {
             bg: "bg-white/60 backdrop-blur-2xl",
             mainBg: "bg-gradient-to-br from-purple-50 via-white to-purple-50/30",
             border: "border-purple-200/30",
-            shadow: "shadow-sm shadow-purple-500/5",
+            shadow: " shadow-purple-500/30",
         },
         text: {
             main: "text-indigo-900",
@@ -90,6 +101,7 @@ export const tokens: Record<Theme, ThemeTokens> = {
             border: "border-purple-200/30",
             placeholder: "placeholder-purple-400",
             focusBg: "focus:bg-purple-50",
+            focusBorder: "focus:ring-2 focus:ring-purple-500/50 border",
             icon: "text-purple-500",
         },
         iconButton: {
@@ -107,6 +119,11 @@ export const tokens: Record<Theme, ThemeTokens> = {
             border: "border-purple-200/30",
             hoverBorder: "hover:border-purple-300/50",
         },
+        error: {
+            bg: "bg-red-50 border",
+            border: "border-red-200",
+            text: "text-red-700",
+        }
     },
 };
 
