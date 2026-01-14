@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom"; // Plus besoin de navigate(0) si on gère bien l'état
 import { GenericAdminForm } from "./GenericAdminForm";
 import { useAuth } from "../context/AuthContext";
 import { type Console, createConsole, deleteConsole, fetchConsoles, updateConsole } from "../http/console";
 
 const Consoles = () => {
     const [consoles, setConsoles] = useState<Console[]>([]);
-    const [editingConsole, setEditingConsole] = useState<Console | null>(null); // État pour savoir quelle console on modifie
+    const [editingConsole, setEditingConsole] = useState<Console | null>(null);
     const { profile } = useAuth();
 
-    // Fonction pour recharger la liste (DRY - Don't Repeat Yourself)
     const loadConsoles = async () => {
         const data = await fetchConsoles();
         setConsoles(data);
@@ -19,28 +17,24 @@ const Consoles = () => {
         loadConsoles();
     }, []);
 
-    // Gestion de la suppression
     const handleDelete = async (id: number) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer ce jeu ?")) {
+        if (window.confirm("Êtes-vous sûr de vouloir supprimer cette console ?")) {
             try {
                 await deleteConsole(id);
-                loadConsoles(); // On recharge la liste
-                // Si on supprimait le jeu en cours d'édition, on annule l'édition
+                loadConsoles();
                 if (editingConsole?.id === id) setEditingConsole(null);
             } catch (error) {
                 console.error("Erreur suppression:", error);
-                alert("Impossible de supprimer le jeu");
+                alert("Impossible de supprimer la console");
             }
         }
     };
 
-    // Gestion de la soumission du formulaire (Création OU Édition)
-    const handleFormSubmit = async (formData: any) => {
-        if (editingConsole) {
-            // Mode ÉDITION
-            await updateConsole(editingConsole.id, formData);
+    // Gestion unifiée de la soumission (Création vs Édition)
+    const handleFormSubmit = async (formData: any, isUpdate: boolean, id?: number) => {
+        if (isUpdate && id) {
+            await updateConsole(id, formData);
         } else {
-            // Mode CRÉATION
             await createConsole(formData);
         }
     };
@@ -56,63 +50,88 @@ const Consoles = () => {
                 <p>No consoles available.</p>
             ) : (
                 <ul className="space-y-4">
-                    {consoles.map((console) => (
-                        <li key={console.id} className="p-4 border rounded flex flex-col md:flex-row gap-4">
-                            {/* Image et infos */}
-                            <div className="flex-1">
-                                {console.image_url && (
-                                    <img src={console.image_url} alt={console.name} className="mb-4 max-w-[200px] h-auto rounded" />
-                                )}
-                                <h3 className="text-lg font-bold">{console.name}</h3>
-                                <p>{console.description}</p>
-                            </div>
+                    {consoles.map((consoleItem) => {
+                        // On vérifie si c'est CETTE console qui est en cours d'édition
+                        const isEditingThisConsole = editingConsole?.id === consoleItem.id;
 
-                            {/* Boutons d'action (Admin seulement) */}
-                            {isAdmin && (
-                                <div className="flex flex-col gap-2 justify-start">
-                                    <button 
-                                        onClick={() => setEditingConsole(console)}
-                                        className="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded text-sm"
-                                    >
-                                        Modifier
-                                    </button>
-                                    <button 
-                                        onClick={() => handleDelete(console.id)}
-                                        className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm"
-                                    >
-                                        Supprimer
-                                    </button>
+                        return (
+                            <li key={consoleItem.id} className="p-4 border rounded bg-white shadow-sm flex flex-col gap-4">
+                                {/* PARTIE AFFICHAGE */}
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <div className="flex-1">
+                                        {consoleItem.image_url && (
+                                            <img src={consoleItem.image_url} alt={consoleItem.name} className="mb-4 max-w-[200px] h-auto rounded" />
+                                        )}
+                                        <h3 className="text-lg font-bold">{consoleItem.name}</h3>
+                                        <p className="text-gray-600 font-medium">{consoleItem.brand}</p>
+                                        <p>{consoleItem.description}</p>
+                                        {consoleItem.release_year && <p className="text-sm text-gray-500">Sortie en : {consoleItem.release_year}</p>}
+                                    </div>
+
+                                    {/* Boutons d'action (Admin seulement) - Cachés si on édite déjà */}
+                                    {isAdmin && !isEditingThisConsole && (
+                                        <div className="flex flex-col gap-2 justify-start">
+                                            <button 
+                                                onClick={() => setEditingConsole(consoleItem)}
+                                                className="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded text-sm transition"
+                                            >
+                                                Modifier
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(consoleItem.id)}
+                                                className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </li>
-                    ))}
+
+                                {/* PARTIE FORMULAIRE D'ÉDITION (INLINE) */}
+                                {isEditingThisConsole && (
+                                    <div className="mt-4 pt-4 border-t-2 border-yellow-100 bg-yellow-50 -mx-4 px-4 pb-4 rounded-b">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h4 className="font-semibold text-yellow-800">Modification de {consoleItem.name}</h4>
+                                            <button 
+                                                onClick={() => setEditingConsole(null)}
+                                                className="text-sm text-gray-500 hover:text-red-500 underline"
+                                            >
+                                                Fermer / Annuler
+                                            </button>
+                                        </div>
+                                        
+                                        <GenericAdminForm
+                                            initialData={consoleItem} 
+                                            fields={[
+                                                { name: 'name', label: 'Name', type: 'text', required: true },
+                                                { name: 'brand', label: 'Brand', type: 'text', required: true },
+                                                { name: 'description', label: 'Description', type: 'textarea' },
+                                                { name: 'release_year', label: 'Release Year', type: 'year' }, // Assure-toi que ton GenericAdminForm gère le type 'year' ou 'number'
+                                                { name: 'image_url', label: 'Image', type: 'image' },
+                                            ]}
+                                            onSubmit={(data) => handleFormSubmit(data, true, consoleItem.id)}
+                                            onSuccess={() => {
+                                                alert('Console modifiée !');
+                                                setEditingConsole(null);
+                                                loadConsoles();
+                                            }}
+                                        /> 
+                                    </div>
+                                )}
+                            </li>
+                        );
+                    })}
                 </ul>
             )}
 
-            {/* FORMULAIRE D'ADMINISTRATION */}
+            {/* FORMULAIRE DE CRÉATION (Toujours visible en bas) */}
             {isAdmin && (
-                <div className="mt-10 p-4 border-t-2 border-gray-200 bg-gray-50 rounded">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold">
-                            {editingConsole ? `Modifier : ${editingConsole.name}` : "Ajouter une nouvelle console"}
-                        </h3>
-                        {editingConsole && (
-                            <button 
-                                onClick={() => setEditingConsole(null)}
-                                className="text-gray-500 hover:text-gray-700 underline text-sm"
-                            >
-                                Annuler l'édition
-                            </button>
-                        )}
-                    </div>
-
-                    {/* IMPORTANT : La prop `key` est cruciale ici.
-                        Quand `editingGame?.id` change, React détruit et recrée le formulaire.
-                        Cela permet de réinitialiser les champs avec les nouvelles `initialData`.
-                    */}
+                <div className="mt-10 p-6 border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg">
+                    <h3 className="text-xl font-bold mb-4 text-center">Ajouter une nouvelle console</h3>
+                    
                     <GenericAdminForm
-                        key={editingConsole ? editingConsole.id : 'create-form'} 
-                        initialData={editingConsole || {}} // Si null, objet vide
+                        key="create-form"
+                        initialData={{}} 
                         fields={[
                             { name: 'name', label: 'Name', type: 'text', required: true },
                             { name: 'brand', label: 'Brand', type: 'text', required: true },
@@ -120,11 +139,10 @@ const Consoles = () => {
                             { name: 'release_year', label: 'Release Year', type: 'year' },
                             { name: 'image_url', label: 'Image', type: 'image' },
                         ]}
-                        onSubmit={handleFormSubmit}
+                        onSubmit={(data) => handleFormSubmit(data, false)}
                         onSuccess={() => {
-                            alert(editingConsole ? 'Console modifiée !' : 'Console créée !');
-                            setEditingConsole(null); // On repasse en mode création
-                            loadConsoles(); // On rafraichit la liste
+                            alert('Console créée !');
+                            loadConsoles();
                         }}
                     /> 
                 </div>

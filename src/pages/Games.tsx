@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react";
 import { createGame, fetchGames, updateGame, deleteGame, type Game } from "../http/game";
-// import { useNavigate } from "react-router-dom"; // Plus besoin de navigate(0) si on gère bien l'état
 import { GenericAdminForm } from "./GenericAdminForm";
 import { useAuth } from "../context/AuthContext";
 
 const Games = () => {
     const [games, setGames] = useState<Game[]>([]);
-    const [editingGame, setEditingGame] = useState<Game | null>(null); // État pour savoir quel jeu on modifie
+    const [editingGame, setEditingGame] = useState<Game | null>(null); 
     const { profile } = useAuth();
 
-    // Fonction pour recharger la liste (DRY - Don't Repeat Yourself)
     const loadGames = async () => {
         const data = await fetchGames();
         setGames(data);
@@ -19,13 +17,11 @@ const Games = () => {
         loadGames();
     }, []);
 
-    // Gestion de la suppression
     const handleDelete = async (id: number) => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer ce jeu ?")) {
             try {
                 await deleteGame(id);
-                loadGames(); // On recharge la liste
-                // Si on supprimait le jeu en cours d'édition, on annule l'édition
+                loadGames();
                 if (editingGame?.id === id) setEditingGame(null);
             } catch (error) {
                 console.error("Erreur suppression:", error);
@@ -34,13 +30,11 @@ const Games = () => {
         }
     };
 
-    // Gestion de la soumission du formulaire (Création OU Édition)
-    const handleFormSubmit = async (formData: any) => {
-        if (editingGame) {
-            // Mode ÉDITION
-            await updateGame(editingGame.id, formData);
+    // Gestion de la soumission (Adaptée pour gérer les deux cas)
+    const handleFormSubmit = async (formData: any, isUpdate: boolean, id?: number) => {
+        if (isUpdate && id) {
+            await updateGame(id, formData);
         } else {
-            // Mode CRÉATION
             await createGame(formData);
         }
     };
@@ -56,75 +50,98 @@ const Games = () => {
                 <p>No games available.</p>
             ) : (
                 <ul className="space-y-4">
-                    {games.map((game) => (
-                        <li key={game.id} className="p-4 border rounded flex flex-col md:flex-row gap-4">
-                            {/* Image et infos */}
-                            <div className="flex-1">
-                                {game.image_url && (
-                                    <img src={game.image_url} alt={game.name} className="mb-4 max-w-[200px] h-auto rounded" />
-                                )}
-                                <h3 className="text-lg font-bold">{game.name}</h3>
-                                <p>{game.description}</p>
-                                <p><strong>PEGI:</strong> {game.pegi}</p>
-                            </div>
+                    {games.map((game) => {
+                        // On vérifie si c'est CE jeu qui est en cours d'édition
+                        const isEditingThisGame = editingGame?.id === game.id;
 
-                            {/* Boutons d'action (Admin seulement) */}
-                            {isAdmin && (
-                                <div className="flex flex-col gap-2 justify-start">
-                                    <button 
-                                        onClick={() => setEditingGame(game)}
-                                        className="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded text-sm"
-                                    >
-                                        Modifier
-                                    </button>
-                                    <button 
-                                        onClick={() => handleDelete(game.id)}
-                                        className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm"
-                                    >
-                                        Supprimer
-                                    </button>
+                        return (
+                            <li key={game.id} className="p-4 border rounded bg-white shadow-sm flex flex-col gap-4">
+                                {/* PARTIE AFFICHAGE (Toujours visible, ou tu peux la cacher si isEditingThisGame est vrai) */}
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <div className="flex-1">
+                                        {game.image_url && (
+                                            <img src={game.image_url} alt={game.name} className="mb-4 max-w-[200px] h-auto rounded" />
+                                        )}
+                                        <h3 className="text-lg font-bold">{game.name}</h3>
+                                        <p>{game.description}</p>
+                                        <p><strong>PEGI:</strong> {game.pegi}</p>
+                                    </div>
+
+                                    {/* Boutons d'action (Admin seulement) */}
+                                    {isAdmin && !isEditingThisGame && (
+                                        <div className="flex flex-col gap-2 justify-start">
+                                            <button 
+                                                onClick={() => setEditingGame(game)}
+                                                className="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded text-sm transition"
+                                            >
+                                                Modifier
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(game.id)}
+                                                className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </li>
-                    ))}
+
+                                {/* PARTIE FORMULAIRE D'ÉDITION (Affichée conditionnellement) */}
+                                {isEditingThisGame && (
+                                    <div className="mt-4 pt-4 border-t-2 border-yellow-100 bg-yellow-50 -mx-4 px-4 pb-4 rounded-b">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h4 className="font-semibold text-yellow-800">Modification de {game.name}</h4>
+                                            <button 
+                                                onClick={() => setEditingGame(null)}
+                                                className="text-sm text-gray-500 hover:text-red-500 underline"
+                                            >
+                                                Fermer / Annuler
+                                            </button>
+                                        </div>
+                                        
+                                        <GenericAdminForm
+                                            // Pas besoin de clé ici car le composant est monté conditionnellement
+                                            initialData={game}
+                                            fields={[
+                                                { name: 'name', label: 'Name', type: 'text', required: true },
+                                                { name: 'description', label: 'Description', type: 'textarea' },
+                                                { name: 'pegi', label: 'PEGI', type: 'number' },
+                                                { name: 'image_url', label: 'Image', type: 'image' },
+                                            ]}
+                                            onSubmit={(data) => handleFormSubmit(data, true, game.id)}
+                                            onSuccess={() => {
+                                                alert('Jeu modifié !');
+                                                setEditingGame(null); // Ferme le formulaire
+                                                loadGames();
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </li>
+                        );
+                    })}
                 </ul>
             )}
 
-            {/* FORMULAIRE D'ADMINISTRATION */}
+            {/* FORMULAIRE DE CRÉATION (Séparé en bas, toujours dispo pour AJOUTER) */}
             {isAdmin && (
-                <div className="mt-10 p-4 border-t-2 border-gray-200 bg-gray-50 rounded">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold">
-                            {editingGame ? `Modifier : ${editingGame.name}` : "Ajouter un nouveau jeu"}
-                        </h3>
-                        {editingGame && (
-                            <button 
-                                onClick={() => setEditingGame(null)}
-                                className="text-gray-500 hover:text-gray-700 underline text-sm"
-                            >
-                                Annuler l'édition
-                            </button>
-                        )}
-                    </div>
-
-                    {/* IMPORTANT : La prop `key` est cruciale ici.
-                        Quand `editingGame?.id` change, React détruit et recrée le formulaire.
-                        Cela permet de réinitialiser les champs avec les nouvelles `initialData`.
-                    */}
+                <div className="mt-10 p-6 border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg">
+                    <h3 className="text-xl font-bold mb-4 text-center">Ajouter un nouveau jeu</h3>
+                    
+                    {/* On force une key statique ici pour le mode création */}
                     <GenericAdminForm
-                        key={editingGame ? editingGame.id : 'create-form'} 
-                        initialData={editingGame || {}} // Si null, objet vide
+                        key="create-form"
+                        initialData={{}} 
                         fields={[
                             { name: 'name', label: 'Name', type: 'text', required: true },
                             { name: 'description', label: 'Description', type: 'textarea' },
                             { name: 'pegi', label: 'PEGI', type: 'number' },
                             { name: 'image_url', label: 'Image', type: 'image' },
                         ]}
-                        onSubmit={handleFormSubmit}
+                        onSubmit={(data) => handleFormSubmit(data, false)}
                         onSuccess={() => {
-                            alert(editingGame ? 'Jeu modifié !' : 'Jeu créé !');
-                            setEditingGame(null); // On repasse en mode création
-                            loadGames(); // On rafraichit la liste
+                            alert('Nouveau jeu créé !');
+                            loadGames();
                         }}
                     /> 
                 </div>
