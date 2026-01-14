@@ -19,6 +19,20 @@ export const fetchGames = async (): Promise<Game[]> => {
     return data || [];
 }
 
+export const fetchGamesToSelect = async (): Promise<{ label: string; value: number }[]> => {
+    const { data, error } = await supabase
+        .from('game')
+        .select('id, name');
+        
+    if (error) {
+        throw new Error(error.message);
+    }
+    return (data || []).map(game => ({
+        label: game.name,
+        value: game.id
+    }));
+}
+
 export const fetchGameById = async (id: number): Promise<Game | null> => {
     const { data, error } = await supabase
         .from('game')

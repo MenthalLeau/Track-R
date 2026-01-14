@@ -48,6 +48,8 @@ export const GenericAdminForm: React.FC<Props> = ({ fields, initialData, onSubmi
     const inputClasses = "mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 disabled:shadow-none";
     const labelClasses = "block text-sm font-medium text-gray-700";
 
+    console.log('Rendering GenericAdminForm with formData:', formData);
+
     return (
         <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Éditer les informations</h2>
@@ -95,7 +97,7 @@ export const GenericAdminForm: React.FC<Props> = ({ fields, initialData, onSubmi
                             <select
                                 id={field.name}
                                 className={inputClasses}
-                                value={formData[field.name]}
+                                value={formData[field.valueFromObject || field.name] || ''}
                                 onChange={(e) => handleChange(field.name, e.target.value)}
                             >
                                 <option value="">Sélectionner une option</option>
