@@ -1,11 +1,12 @@
-import { supabase } from '../lib/supabaseClient.ts';
-import type { Game } from './game.ts';
+import { supabase } from '../lib/supabaseClient'; // (Note: .ts extension souvent pas nécessaire dans l'import selon config)
+import type { Game } from './game';
 
 export interface Achievement {
     id: number;
     name: string;
     description: string;
     game: Game;
+    gid?: number; // Ajout optionnel pour le typage, car le formulaire envoie 'gid'
 }
 
 export const fetchAchievements = async (): Promise<Achievement[]> => {
@@ -15,6 +16,7 @@ export const fetchAchievements = async (): Promise<Achievement[]> => {
             id,
             name,
             description,
+            gid, 
             game:gid (
                 id,
                 name,
@@ -23,13 +25,12 @@ export const fetchAchievements = async (): Promise<Achievement[]> => {
                 image_url
             )
         `);
+        // J'ai ajouté 'gid' dans le select ci-dessus pour qu'on l'ait toujours dispo
         
     if (error) {
         throw new Error(error.message);
     }
 
-    // Supabase usually returns relations as an array (e.g., game: [{...}]).
-    // We map over the results to unwrap that array into a single object.
     return (data || []).map((item: any) => ({
         ...item,
         game: Array.isArray(item.game) ? item.game[0] : item.game
@@ -43,6 +44,7 @@ export const fetchAchievementById = async (id: number): Promise<Achievement | nu
             id,
             name,
             description,
+            gid,
             game:gid (
                 id,
                 name,
@@ -60,20 +62,29 @@ export const fetchAchievementById = async (id: number): Promise<Achievement | nu
 
     if (!data) return null;
 
-    // Fix: Create a NEW object to satisfy the Achievement interface
     const achievement: Achievement = {
         ...data,
-        // Check if game is an array and extract the first item, otherwise use it as is
         game: Array.isArray(data.game) ? data.game[0] : data.game
     };
 
     return achievement;
 }
 
-export const createAchievement = async (achievement: Omit<Achievement, 'id'>): Promise<Achievement> => {
+// --- CORRECTION ICI ---
+export const createAchievement = async (achievement: any): Promise<Achievement> => {
+    // 1. On crée une copie pour ne pas modifier l'objet original de l'UI
+    const payload = { ...achievement };
+
+    // 2. On supprime la relation imbriquée 'game' car ce n'est pas une colonne
+    delete payload.game;
+    // 3. On supprime l'ID s'il est présent (la BDD le gère)
+    delete payload.id;
+
+    // Le payload contient maintenant { name, description, gid } -> C'est propre !
+
     const { data, error } = await supabase
         .from('achievement')
-        .insert(achievement)
+        .insert(payload)
         .select()
         .single();
 
@@ -83,10 +94,20 @@ export const createAchievement = async (achievement: Omit<Achievement, 'id'>): P
     return data;
 }
 
+// --- CORRECTION ICI ---
 export const updateAchievement = async (id: number, achievement: Partial<Achievement>): Promise<Achievement> => {
+    // 1. On crée une copie
+    const payload: any = { ...achievement };
+
+    // 2. On supprime la relation imbriquée qui cause le crash
+    delete payload.game;
+    
+    // 3. On supprime l'ID du payload (puisqu'on l'utilise déjà dans .eq('id', id))
+    delete payload.id;
+
     const { data, error } = await supabase
         .from('achievement')
-        .update(achievement)
+        .update(payload)
         .eq('id', id)
         .select()
         .single();
