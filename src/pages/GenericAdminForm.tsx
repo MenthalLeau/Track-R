@@ -130,6 +130,16 @@ export const GenericAdminForm: React.FC<Props> = ({ fields, initialData, onSubmi
                                 )}
                             </div>
                         )}
+
+                        {field.type === 'year' && (
+                            <input
+                                id={field.name}
+                                type="date"
+                                className={inputClasses}
+                                value={formData[field.name] || ''}
+                                onChange={(e) => handleChange(field.name, e.target.value)}
+                            />
+                        )}
                     </div>
                 ))}
 
