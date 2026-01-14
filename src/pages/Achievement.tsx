@@ -1,31 +1,39 @@
 import { useState, useEffect } from "react";
 import { GenericAdminForm } from "./GenericAdminForm";
 import { useAuth } from "../context/AuthContext";
-import { type Console, createConsole, deleteConsole, fetchConsoles, updateConsole } from "../http/console";
+import { createAchievement, deleteAchievement, fetchAchievements,  updateAchievement,  type Achievement } from "../http/achievement";
+import { fetchGamesToSelect } from "../http/game";
 
-const Consoles = () => {
-    const [consoles, setConsoles] = useState<Console[]>([]);
-    const [editingConsole, setEditingConsole] = useState<Console | null>(null);
+const Achievements = () => {
+    const [achievements, setAchievements] = useState<Achievement[]>([]);
+    const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
+    const [gamesOptions, setGamesOptions] = useState<{ value: number; label: string }[]>([]);
     const { profile } = useAuth();
 
-    const loadConsoles = async () => {
-        const data = await fetchConsoles();
-        setConsoles(data);
+    const loadAchievements = async () => {
+        const data = await fetchAchievements();
+        setAchievements(data);
     };
 
+    const loadGamesOptions = async () => {
+        const options = await fetchGamesToSelect();
+        setGamesOptions(options);
+    }
+
     useEffect(() => {
-        loadConsoles();
+        loadAchievements();
+        loadGamesOptions();
     }, []);
 
     const handleDelete = async (id: number) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer cette console ?")) {
+        if (window.confirm("Êtes-vous sûr de vouloir supprimer ce succès ?")) {
             try {
-                await deleteConsole(id);
-                loadConsoles();
-                if (editingConsole?.id === id) setEditingConsole(null);
+                await deleteAchievement(id);
+                loadAchievements();
+                if (editingAchievement?.id === id) setEditingAchievement(null);
             } catch (error) {
                 console.error("Erreur suppression:", error);
-                alert("Impossible de supprimer la console");
+                alert("Impossible de supprimer le succès");
             }
         }
     };
@@ -33,52 +41,48 @@ const Consoles = () => {
     // Gestion unifiée de la soumission (Création vs Édition)
     const handleFormSubmit = async (formData: any, isUpdate: boolean, id?: number) => {
         if (isUpdate && id) {
-            await updateConsole(id, formData);
+            await updateAchievement(id, formData);
         } else {
-            await createConsole(formData);
+            await createAchievement(formData);
         }
     };
 
     const isAdmin = profile && profile.rid === 2;
 
     return (
-        <div className="consoles-list mt-6 p-4 border-t">
-            <h2 className="text-xl font-semibold mb-4">Consoles</h2>
+        <div className="achievements-list mt-6 p-4 border-t">
+            <h2 className="text-xl font-semibold mb-4">Succès</h2>
             
-            {/* LISTE DES CONSOLES */}
-            {consoles.length === 0 ? (
-                <p>No consoles available.</p>
+            {/* LISTE DES SUCCÈS */}
+            {achievements.length === 0 ? (
+                <p>No achievements available.</p>
             ) : (
                 <ul className="space-y-4">
-                    {consoles.map((consoleItem) => {
-                        // On vérifie si c'est CETTE console qui est en cours d'édition
-                        const isEditingThisConsole = editingConsole?.id === consoleItem.id;
+                    {achievements.map((achievementItem) => {
+                        // On vérifie si c'est CETTE achievement qui est en cours d'édition
+                        const isEditingThisAchievement = editingAchievement?.id === achievementItem.id;
 
                         return (
-                            <li key={consoleItem.id} className="p-4 border rounded bg-white shadow-sm flex flex-col gap-4">
+                            <li key={achievementItem.id} className="p-4 border rounded bg-white shadow-sm flex flex-col gap-4">
                                 {/* PARTIE AFFICHAGE */}
                                 <div className="flex flex-col md:flex-row gap-4">
                                     <div className="flex-1">
-                                        {consoleItem.image_url && (
-                                            <img src={consoleItem.image_url} alt={consoleItem.name} className="mb-4 max-w-[200px] h-auto rounded" />
-                                        )}
-                                        <h3 className="text-lg font-bold">{consoleItem.name}</h3>
-                                        <p className="text-gray-600 font-medium">{consoleItem.brand}</p>
-                                        <p>{consoleItem.description}</p>
-                                        {consoleItem.release_year && <p className="text-sm text-gray-500">Sortie en : {consoleItem.release_year}</p>}
+                                        <h3 className="text-lg font-bold">{achievementItem.name}</h3>
+                                        <p className="text-gray-600 font-medium">{achievementItem.game.name}</p>
+                                        <p>{achievementItem.description}</p>
                                     </div>
 
                                     {/* Boutons d'action (Admin seulement) - Cachés si on édite déjà */}
-                                    {isAdmin && !isEditingThisConsole && (
+                                    {isAdmin && !isEditingThisAchievement && (
                                         <div className="flex flex-col gap-2 justify-start">
                                             <button 
-                                                onClick={() => setEditingConsole(consoleItem)}
+                                                onClick={() => setEditingAchievement(achievementItem)}
                                                 className="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded text-sm transition"
                                             >
                                                 Modifier
                                             </button>
                                             <button 
-                                                onClick={() => handleDelete(consoleItem.id)}
+                                                onClick={() => handleDelete(achievementItem.id)}
                                                 className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition"
                                             >
                                                 Supprimer
@@ -88,12 +92,12 @@ const Consoles = () => {
                                 </div>
 
                                 {/* PARTIE FORMULAIRE D'ÉDITION (INLINE) */}
-                                {isEditingThisConsole && (
+                                {isEditingThisAchievement && (
                                     <div className="mt-4 pt-4 border-t-2 border-yellow-100 bg-yellow-50 -mx-4 px-4 pb-4 rounded-b">
                                         <div className="flex justify-between items-center mb-2">
-                                            <h4 className="font-semibold text-yellow-800">Modification de {consoleItem.name}</h4>
+                                            <h4 className="font-semibold text-yellow-800">Modification de {achievementItem.name}</h4>
                                             <button 
-                                                onClick={() => setEditingConsole(null)}
+                                                onClick={() => setEditingAchievement(null)}
                                                 className="text-sm text-gray-500 hover:text-red-500 underline"
                                             >
                                                 Fermer / Annuler
@@ -101,19 +105,17 @@ const Consoles = () => {
                                         </div>
                                         
                                         <GenericAdminForm
-                                            initialData={consoleItem} 
+                                            initialData={achievementItem} 
                                             fields={[
                                                 { name: 'name', label: 'Name', type: 'text', required: true },
-                                                { name: 'brand', label: 'Brand', type: 'text', required: true },
                                                 { name: 'description', label: 'Description', type: 'textarea' },
-                                                { name: 'release_year', label: 'Release Year', type: 'year' }, // Assure-toi que ton GenericAdminForm gère le type 'year' ou 'number'
-                                                { name: 'image_url', label: 'Image', type: 'image' },
+                                                { name: 'gid', valueFromObject: 'game.id', label: 'Jeu', type: 'select', options: gamesOptions, required: true },
                                             ]}
-                                            onSubmit={(data) => handleFormSubmit(data, true, consoleItem.id)}
+                                            onSubmit={(data) => handleFormSubmit(data, true, achievementItem.id)}
                                             onSuccess={() => {
                                                 alert('Console modifiée !');
-                                                setEditingConsole(null);
-                                                loadConsoles();
+                                                setEditingAchievement(null);
+                                                loadAchievements();
                                             }}
                                         /> 
                                     </div>
@@ -134,15 +136,13 @@ const Consoles = () => {
                         initialData={{}} 
                         fields={[
                             { name: 'name', label: 'Name', type: 'text', required: true },
-                            { name: 'brand', label: 'Brand', type: 'text', required: true },
                             { name: 'description', label: 'Description', type: 'textarea' },
-                            { name: 'release_year', label: 'Release Year', type: 'year' },
-                            { name: 'image_url', label: 'Image', type: 'image' },
+                            { name: 'gid', label: 'Jeu', type: 'select', options: gamesOptions, required: true },
                         ]}
                         onSubmit={(data) => handleFormSubmit(data, false)}
                         onSuccess={() => {
-                            alert('Console créée !');
-                            loadConsoles();
+                            alert('Succès créée !');
+                            loadAchievements();
                         }}
                     /> 
                 </div>
@@ -151,4 +151,4 @@ const Consoles = () => {
     );
 };
 
-export default Consoles;
+export default Achievements;
