@@ -35,9 +35,9 @@ export default function Layout() {
                     onSearchChange={setSearchQuery}
                 />
 
-                <main className="flex-1 p-8">
+                <div className="flex-1 p-8">
                     <Outlet context={{ theme, searchQuery }} />
-                </main>
+                </div>
             </div>
         </div>
     );

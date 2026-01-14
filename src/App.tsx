@@ -8,6 +8,7 @@ import Players from './pages/Players.tsx';
 import Games from './pages/Games.tsx';
 import Consoles from './pages/Consoles.tsx';
 import Settings from './pages/Settings.tsx';
+import Achievements from './pages/Achievement.tsx';
 
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/players" element={<Players />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/achievements" element={<Achievements />} />
 
                     {/* Gestion d'une route 404 (optionnel) */}
                     <Route path="*" element={<div>404 - Page non trouvée</div>} />
