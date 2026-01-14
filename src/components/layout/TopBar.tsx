@@ -27,7 +27,7 @@ export function TopBar({
     const t = getThemeTokens(theme);
 
     return (
-        <header className={`sticky top-0 z-30 border-b transition-colors duration-300 ${t.layout.bg} ${t.layout.border} ${t.layout.shadow}`}>
+        <header className={`sticky top-0 z-30 border-b transition-colors duration-300 ${t.layout.bg} ${t.layout.border}`}>
             {/* Ajustement du padding pour être responsive : px-6 sur mobile, px-12 sur desktop */}
             <div className="px-6 md:px-12 py-4 flex items-center justify-between">
 
