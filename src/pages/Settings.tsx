@@ -42,26 +42,54 @@ export default function SettingsPage() {
 
     // Synchronisation des données (Pré-remplissage)
     useEffect(() => {
-        if (user) {
-            setNickname(user.user_metadata?.nickname || '');
+        const getProfile = async () => {
+            if (!user) return;
+            
             setEmail(user.email || '');
-        }
+
+            try {
+                const { data, error } = await supabase
+                    .from('profile')
+                    .select('nickname')
+                    .eq('uid', user.id)
+                    .single();
+
+                if (error) {
+                    console.warn("Erreur lors du chargement du profil:", error);
+                } else if (data) {
+                    setNickname(data.nickname || '');
+                }
+            } catch (error) {
+                console.error("Erreur inattendue:", error);
+            }
+        };
+
+        getProfile();
     }, [user]);
 
     // --- 3. LOGIQUE MÉTIER ---
 
     // Mise à jour du Pseudo
     const handleUpdateNickname = async () => {
+        if (!user) return;
         setLoading(true);
         setMessage(null);
+
         try {
-            const { error } = await supabase.auth.updateUser({
-                data: { nickname: nickname }
-            });
+            const { error } = await supabase
+                .from('profile')
+                .update({ nickname: nickname })
+                .eq('uid', user.id); 
+
             if (error) throw error;
-            setMessage({ type: 'success', text: 'Pseudo mis à jour avec succès !' });
+
+            setMessage({ type: 'success', text: 'Profil mis à jour avec succès !' });
+            
+            await supabase.auth.updateUser({ data: { nickname: nickname } });
+
         } catch (err: any) {
-            setMessage({ type: 'error', text: err.message });
+            console.error(err);
+            setMessage({ type: 'error', text: "Erreur lors de la mise à jour du profil." });
         } finally {
             setLoading(false);
         }
