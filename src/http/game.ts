@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import type { GameConsole } from './console';
 
 export interface Game {
     id: number;
@@ -6,6 +7,8 @@ export interface Game {
     description: string;
     pegi: number;
     image_url?: string;
+    consoles?: GameConsole[];
+    gameconsoles?: number[];
 }
 
 export const fetchGames = async (): Promise<Game[]> => {
@@ -17,6 +20,37 @@ export const fetchGames = async (): Promise<Game[]> => {
         throw new Error(error.message);
     }
     return data || [];
+}
+
+export const fetchALLGamesWithConsole = async (): Promise<Game[]> => {
+    const { data, error } = await supabase
+        .from('game')
+        .select(`
+            id,
+            name,
+            description,
+            pegi,
+            image_url,
+            consoles:gameconsole (
+                console (
+                    id,
+                    name,
+                    brand,
+                    release_year,
+                    description,
+                    image_url
+                )
+            )
+        `);
+        
+    if (error) {
+        throw new Error(error.message);
+    }
+    
+    return (data || []).map((item: any) => ({
+        ...item,
+        consoles: item.consoles ? item.consoles.map((gc: any) => gc.console) : []
+    })) as Game[];
 }
 
 export const fetchGamesToSelect = async (): Promise<{ label: string; value: number }[]> => {
@@ -52,8 +86,6 @@ export const uploadGameImage = async (file: File): Promise<string> => {
     const fileName = `${Date.now()}.${fileExt}`;
     
     // 2. On définit le chemin.
-    // Avant c'était : `game-covers/${fileName}`
-    // Maintenant, c'est juste le nom du fichier pour être à la racine :
     const filePath = fileName; 
 
     // 3. On upload dans le bon bucket 'game-images'
@@ -72,27 +104,83 @@ export const uploadGameImage = async (file: File): Promise<string> => {
 };
 
 export const createGame = async (game: Omit<Game, 'id'>): Promise<Game> => {
+    const gameCopy = { ...game };
+    // on supprime la propriété gameconsoles pour l'insertion dans la table game
+    delete gameCopy.gameconsoles;
     const { data, error } = await supabase
         .from('game')
-        .insert(game)
+        .insert(gameCopy)
+        .select()
         .single();
         
     if (error) {
         throw new Error(error.message);
+    }
+    console.log("data created game:", data);
+    // si la propriété gameconsoles est présente dans game, il faut insérer les relations dans la table gameconsole
+    if (game.gameconsoles && game.gameconsoles.length > 0) {
+        const relations = game.gameconsoles.map(cid => ({
+            gid: data.id,
+            cid
+        }));
+        const { error: relError } = await supabase
+            .from('gameconsole')
+            .insert(relations);
+        if (relError) {
+            throw new Error(relError.message);
+        }
     }
     return data;
 }
 
-export const updateGame = async (id: number, game: Partial<Omit<Game, 'id'>>): Promise<Game> => {
+export const updateGame = async (id: number, game: any): Promise<Game> => {
+    // On crée une copie pour ne pas modifier l'objet original de l'UI
+    const gameCopy = { ...game };
+    
+    // On sauvegarde les IDs des consoles (le tableau [1, 5, ...]) pour la table de liaison plus tard
+    const newConsoleIds = gameCopy.gameconsoles;
+    
+    // enlever les propriétés non pertinentes
+    delete gameCopy.gameconsoles; // c'est pour la logique JS
+    delete gameCopy.consoles;     
+    delete gameCopy.id;           // osef de l'ID
+
+    // Update propre de la table 'game' (uniquement name, description, pegi, etc.)
     const { data, error } = await supabase
         .from('game')
-        .update(game)
+        .update(gameCopy)
         .eq('id', id)
+        .select()
         .single();
         
     if (error) {
         throw new Error(error.message);
     }
+
+    if (newConsoleIds !== undefined) {
+        // Suppression des anciennes relations
+        const { error: delError } = await supabase
+            .from('gameconsole')
+            .delete()
+            .eq('gid', id);
+            
+        if (delError) throw new Error(delError.message);
+
+        // Ajout des nouvelles relations
+        if (newConsoleIds.length > 0) {
+            const relations = newConsoleIds.map((cid: number) => ({
+                gid: id,
+                cid: cid
+            }));
+            
+            const { error: insError } = await supabase
+                .from('gameconsole')
+                .insert(relations);
+                
+            if (insError) throw new Error(insError.message);
+        }
+    }
+
     return data;
 }
 
