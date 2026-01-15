@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createGame, fetchGames, updateGame, deleteGame, type Game } from "../http/game";
+import { createGame, fetchGames, updateGame, deleteGame, type Game, fetchALLGamesWithConsole } from "../http/game";
 import { GenericAdminForm } from "./GenericAdminForm";
 import { useAuth } from "../context/AuthContext";
 
@@ -9,7 +9,7 @@ const Games = () => {
     const { profile } = useAuth();
 
     const loadGames = async () => {
-        const data = await fetchGames();
+        const data = await fetchALLGamesWithConsole();
         setGames(data);
     };
 
@@ -65,6 +65,16 @@ const Games = () => {
                                         <h3 className="text-lg font-bold">{game.name}</h3>
                                         <p>{game.description}</p>
                                         <p><strong>PEGI:</strong> {game.pegi}</p>
+                                        {game.consoles && game.consoles.length > 0 && (
+                                            <div className="mt-2">
+                                                <strong>Consoles associées:</strong>
+                                                <ul className="list-disc list-inside">
+                                                    {game.consoles.map((console) => (
+                                                        <li key={console.id}>{console.name}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Boutons d'action (Admin seulement) */}
@@ -87,36 +97,44 @@ const Games = () => {
                                 </div>
 
                                 {/* PARTIE FORMULAIRE D'ÉDITION (Affichée conditionnellement) */}
-                                {isEditingThisGame && (
-                                    <div className="mt-4 pt-4 border-t-2 border-yellow-100 bg-yellow-50 -mx-4 px-4 pb-4 rounded-b">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <h4 className="font-semibold text-yellow-800">Modification de {game.name}</h4>
-                                            <button 
-                                                onClick={() => setEditingGame(null)}
-                                                className="text-sm text-gray-500 hover:text-red-500 underline"
-                                            >
-                                                Fermer / Annuler
-                                            </button>
+                                    {isEditingThisGame && (
+                                        <div className="mt-4 pt-4 border-t-2 border-yellow-100 bg-yellow-50 -mx-4 px-4 pb-4 rounded-b">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <h4 className="font-semibold text-yellow-800">Modification de {game.name}</h4>
+                                                <button 
+                                                    onClick={() => setEditingGame(null)}
+                                                    className="text-sm text-gray-500 hover:text-red-500 underline"
+                                                >
+                                                    Fermer / Annuler
+                                                </button>
+                                            </div>
+                                            
+                                            <GenericAdminForm
+                                                // CORRECTION 1 : On prépare les données pour que le champ 'gameconsoles' reçoive les IDs
+                                                initialData={{
+                                                    ...game,
+                                                    gameconsoles: game.consoles ? game.consoles.map(c => c.id) : []
+                                                }}
+                                                // CORRECTION 2 : On ajoute foreignTables pour charger la liste des consoles
+                                                foreignTables={['console']} 
+                                                fields={[
+                                                    { name: 'name', label: 'Name', type: 'text', required: true },
+                                                    { name: 'description', label: 'Description', type: 'textarea' },
+                                                    { name: 'pegi', label: 'PEGI', type: 'number' },
+                                                    { name: 'image_url', label: 'Image', type: 'image' },
+                                                    // Note: selectedForeignKeys n'est pas utilisé par ton GenericAdminForm actuel, 
+                                                    // c'est initialData qui compte. On peut garder la ligne propre :
+                                                    { name: 'gameconsoles', label: 'Consoles associées', type: 'superselect', foreignTable: 'console' }
+                                                ]}
+                                                onSubmit={(data) => handleFormSubmit(data, true, game.id)}
+                                                onSuccess={() => {
+                                                    alert('Jeu modifié !');
+                                                    setEditingGame(null);
+                                                    loadGames();
+                                                }}
+                                            />
                                         </div>
-                                        
-                                        <GenericAdminForm
-                                            // Pas besoin de clé ici car le composant est monté conditionnellement
-                                            initialData={game}
-                                            fields={[
-                                                { name: 'name', label: 'Name', type: 'text', required: true },
-                                                { name: 'description', label: 'Description', type: 'textarea' },
-                                                { name: 'pegi', label: 'PEGI', type: 'number' },
-                                                { name: 'image_url', label: 'Image', type: 'image' },
-                                            ]}
-                                            onSubmit={(data) => handleFormSubmit(data, true, game.id)}
-                                            onSuccess={() => {
-                                                alert('Jeu modifié !');
-                                                setEditingGame(null); // Ferme le formulaire
-                                                loadGames();
-                                            }}
-                                        />
-                                    </div>
-                                )}
+                                    )}
                             </li>
                         );
                     })}
@@ -131,12 +149,14 @@ const Games = () => {
                     {/* On force une key statique ici pour le mode création */}
                     <GenericAdminForm
                         key="create-form"
-                        initialData={{}} 
+                        initialData={{}}
+                        foreignTables={['console']}
                         fields={[
                             { name: 'name', label: 'Name', type: 'text', required: true },
                             { name: 'description', label: 'Description', type: 'textarea' },
                             { name: 'pegi', label: 'PEGI', type: 'number' },
                             { name: 'image_url', label: 'Image', type: 'image' },
+                            { name: 'gameconsoles', label: 'Consoles associées', type: 'superselect', foreignTable: 'console', selectedForeignKeys: []}
                         ]}
                         onSubmit={(data) => handleFormSubmit(data, false)}
                         onSuccess={() => {

@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabaseClient.ts';
 
-export interface Console {
+export interface GameConsole {
     id: number;
     name: string;
     description: string;
@@ -9,7 +9,7 @@ export interface Console {
     image_url?: string;
 }
 
-export const fetchConsoles = async (): Promise<Console[]> => {
+export const fetchConsoles = async (): Promise<GameConsole[]> => {
     const { data, error } = await supabase
         .from('console')
         .select('id, name, brand, release_year, description, image_url');
@@ -20,7 +20,7 @@ export const fetchConsoles = async (): Promise<Console[]> => {
     return data || [];
 }
 
-export const fetchConsoleById = async (id: number): Promise<Console | null> => {
+export const fetchConsoleById = async (id: number): Promise<GameConsole | null> => {
     const { data, error } = await supabase
         .from('console')
         .select('id, name, brand, release_year, image_url, description')
@@ -51,7 +51,7 @@ export const uploadConsoleImage = async (file: File): Promise<string> => {
     return data.publicUrl;
 };
 
-export const createConsole = async (console: Omit<Console, 'id'>): Promise<Console> => {
+export const createConsole = async (console: Omit<GameConsole, 'id'>): Promise<GameConsole> => {
     const { data, error } = await supabase
         .from('console')
         .insert([console])
@@ -64,7 +64,7 @@ export const createConsole = async (console: Omit<Console, 'id'>): Promise<Conso
     return data;
 }
 
-export const updateConsole = async (id: number, console: Partial<Console>): Promise<Console> => {
+export const updateConsole = async (id: number, console: Partial<GameConsole>): Promise<GameConsole> => {
     const { data, error } = await supabase
         .from('console')
         .update(console)

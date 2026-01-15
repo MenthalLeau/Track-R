@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { GenericAdminForm } from "./GenericAdminForm";
 import { useAuth } from "../context/AuthContext";
-import { type Console, createConsole, deleteConsole, fetchConsoles, updateConsole } from "../http/console";
+import { type GameConsole, createConsole, deleteConsole, fetchConsoles, updateConsole } from "../http/console";
 
 const Consoles = () => {
-    const [consoles, setConsoles] = useState<Console[]>([]);
-    const [editingConsole, setEditingConsole] = useState<Console | null>(null);
+    const [consoles, setConsoles] = useState<GameConsole[]>([]);
+    const [editingConsole, setEditingConsole] = useState<GameConsole | null>(null);
     const { profile } = useAuth();
 
     const loadConsoles = async () => {
