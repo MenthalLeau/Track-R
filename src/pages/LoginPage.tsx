@@ -8,13 +8,8 @@ import type { Theme } from '../components/theme';
 
 export default function LoginPage() {
     // --- 1. CONFIGURATION DU THÈME ---
-    // Récupération du contexte partagé par le Layout (Outlet)
     const context = useOutletContext<{ theme: Theme }>();
-
-    // Fallback : Context > LocalStorage > 'dark' par défaut
     const currentTheme: Theme = context?.theme || (localStorage.getItem('trackr-theme') as Theme) || 'dark';
-
-    // Génération des tokens de style
     const t = getThemeTokens(currentTheme);
 
     // --- 2. LOGIQUE DU COMPOSANT ---
@@ -41,10 +36,20 @@ export default function LoginPage() {
         setLoading(true);
         try {
             await signIn(email, password);
-            navigate('/'); // Redirection vers le Dashboard après succès
+            navigate('/'); // Redirection dashboard
         } catch (err: any) {
             console.error(err);
-            setError("Email ou mot de passe incorrect.");
+
+            // Gestion fine des messages d'erreur
+            const msg = (err.message || "").toLowerCase();
+
+            if (msg.includes("email not confirmed")) {
+                setError("Veuillez confirmer votre adresse email avant de vous connecter.");
+            } else if (msg.includes("invalid login credentials")) {
+                setError("Email ou mot de passe incorrect.");
+            } else {
+                setError("Une erreur est survenue lors de la connexion.");
+            }
         } finally {
             setLoading(false);
         }
@@ -54,7 +59,7 @@ export default function LoginPage() {
         <div className="flex items-center justify-center min-h-[80vh] transition-colors duration-500">
 
             {/* --- CARTE DE CONNEXION --- */}
-            <div className={`w-full max-w-md backdrop-blur-2xl rounded-3xl p-10 shadow-2xl transition-colors duration-300 ${t.layout.bg} ${t.layout.border} ${t.layout.shadow}`}>
+            <div className={`w-full max-w-md backdrop-blur-2xl rounded-3xl p-10 shadow-2xl transition-all duration-300 ${t.layout.bg} ${t.layout.border} ${t.layout.shadow}`}>
 
                 {/* 1. Logo & En-tête */}
                 <div className="flex justify-center mb-8">
@@ -64,29 +69,28 @@ export default function LoginPage() {
                 </div>
 
                 <div className="text-center mb-8">
-                    <h1 className={`text-3xl font-bold mb-2 ${t.text.main}`}>
-                        Connexion
-                    </h1>
-                    <p className={`text-sm ${t.text.muted}`}>
-                        Bienvenue sur Track-R
-                    </p>
+                    <h1 className={`text-3xl font-bold mb-2 ${t.text.main}`}>Connexion</h1>
+                    <p className={`text-sm ${t.text.muted}`}>Bienvenue sur Track-R</p>
                 </div>
 
                 {/* 2. Formulaire */}
                 <form onSubmit={handleSubmit} className="space-y-5">
 
-                    {/* Message d'erreur */}
+                    {/* Affichage des erreurs (Jaune pour confirmation, Rouge pour erreur critique) */}
                     {error && (
-                        <div className={`p-4 rounded-xl text-sm ${t.error.bg} ${t.error.border} ${t.error.text}`}>
-                            {error}
+                        <div className={`p-4 rounded-xl text-sm border flex gap-2 items-start ${
+                            error.includes("confirmer")
+                                ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-500"
+                                : "bg-red-500/10 border-red-500/20 text-red-500"
+                        }`}>
+                            <span>{error.includes("confirmer") ? "⚠️" : "🚫"}</span>
+                            <span>{error}</span>
                         </div>
                     )}
 
                     {/* Champ Email */}
                     <div>
-                        <label htmlFor="email" className={`block text-sm mb-2 font-medium ${t.text.inactive}`}>
-                            Adresse email
-                        </label>
+                        <label htmlFor="email" className={`block text-sm mb-2 font-medium ${t.text.inactive}`}>Adresse email</label>
                         <div className="relative">
                             <Mail className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10 ${t.text.muted}`} />
                             <input
@@ -98,16 +102,14 @@ export default function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="vous@exemple.com"
                                 required
-                                className={`w-full z-0 pl-12 pr-4 py-3.5 rounded-xl transition-all focus:outline-none ${t.input.bg} ${t.input.border} ${t.text.main} ${t.input.placeholder} ${t.input.focusBg} ${t.input.focusBorder}`}
+                                className={`w-full z-0 pl-12 pr-4 py-3.5 rounded-xl transition-all focus:outline-none border ${t.input.bg} ${t.input.border} ${t.text.main} ${t.input.placeholder} ${t.input.focusBg}`}
                             />
                         </div>
                     </div>
 
                     {/* Champ Mot de passe */}
                     <div>
-                        <label htmlFor="password" className={`block text-sm mb-2 font-medium ${t.text.inactive}`}>
-                            Mot de passe
-                        </label>
+                        <label htmlFor="password" className={`block text-sm mb-2 font-medium ${t.text.inactive}`}>Mot de passe</label>
                         <div className="relative">
                             <Lock className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10 ${t.text.muted}`} />
                             <input
@@ -119,17 +121,14 @@ export default function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
                                 required
-                                className={`w-full z-0 pl-12 pr-4 py-3.5 rounded-xl transition-all focus:outline-none ${t.input.bg} ${t.input.border} ${t.text.main} ${t.input.placeholder} ${t.input.focusBg} ${t.input.focusBorder}`}
+                                className={`w-full z-0 pl-12 pr-4 py-3.5 rounded-xl transition-all focus:outline-none border ${t.input.bg} ${t.input.border} ${t.text.main} ${t.input.placeholder} ${t.input.focusBg}`}
                             />
                         </div>
                     </div>
 
-                    {/* Lien "Mot de passe oublié" */}
+                    {/* Lien mot de passe oublié */}
                     <div className="flex justify-end">
-                        <button
-                            type="button"
-                            className={`text-sm transition-colors ${t.iconButton.base} ${t.iconButton.hover}`}
-                        >
+                        <button type="button" className={`text-sm transition-colors ${t.iconButton.base} ${t.iconButton.hover}`}>
                             Mot de passe oublié ?
                         </button>
                     </div>
@@ -154,15 +153,13 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                {/* 3. Pied de carte (Divider + Inscription) */}
+                {/* 3. Pied de page (Divider + Lien inscription) */}
                 <div className="relative my-8">
                     <div className="absolute inset-0 flex items-center opacity-30">
                         <div className={`w-full border-t ${t.layout.border}`}></div>
                     </div>
                     <div className="relative flex justify-center">
-                        <span className={`px-4 text-sm ${t.layout.bg} ${t.text.muted}`}>
-                          ou
-                        </span>
+                        <span className={`px-4 text-sm ${t.layout.bg} ${t.text.muted}`}>ou</span>
                     </div>
                 </div>
 
@@ -177,6 +174,10 @@ export default function LoginPage() {
                             Créer un compte
                         </button>
                     </p>
+                </div>
+
+                <div className="mt-8 text-center">
+                    <p className={`text-xs ${t.text.muted} opacity-70`}>En continuant, vous acceptez nos conditions d'utilisation</p>
                 </div>
             </div>
 

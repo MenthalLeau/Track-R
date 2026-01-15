@@ -113,7 +113,7 @@ const Achievements = () => {
                                             ]}
                                             onSubmit={(data) => handleFormSubmit(data, true, achievementItem.id)}
                                             onSuccess={() => {
-                                                alert('GameConsole modifiée !');
+                                                alert('Console modifiée !');
                                                 setEditingAchievement(null);
                                                 loadAchievements();
                                             }}
