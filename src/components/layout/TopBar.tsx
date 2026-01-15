@@ -1,7 +1,6 @@
-import { Search, Sun, Moon, Bell, Plus } from 'lucide-react';
+import { Search, Sun, Moon, Bell } from 'lucide-react';
 import type { Theme } from '../theme';
 import { getThemeTokens } from '../theme';
-import { useAuth } from '../../context/AuthContext.tsx';
 
 
 interface TopBarProps {
@@ -17,12 +16,10 @@ export function TopBar({
                            theme = 'dark',
                            searchQuery = '',
                            onSearchChange,
-                           onToggleTheme,
-                           onOpenAddConsole,
-                           onOpenAddGame
+                           onToggleTheme
                        }: TopBarProps) {
 
-    const { user, loading, profile } = useAuth();
+
 
     const t = getThemeTokens(theme);
 
@@ -62,31 +59,6 @@ export function TopBar({
                     >
                         <Bell className="w-5 h-5" />
                     </button>
-
-                    <div className="h-6 w-px bg-gray-200/20 mx-1"></div>
-
-                    {/* Boutons d'action : Texte caché sur mobile pour gagner de la place */}
-                    {!loading && user && profile?.rid>1 &&(
-                        <>
-                            <button
-                                onClick={onOpenAddConsole}
-                                className={`flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl transition-all ${t.primaryAction.bgGradient} ${t.primaryAction.hover} ${t.primaryAction.text} ${t.primaryAction.shadow}`}
-                                title="Ajouter une console"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden md:inline font-medium">Console</span>
-                            </button>
-
-                            <button
-                                onClick={onOpenAddGame}
-                                className={`flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl transition-all ${t.primaryAction.bgGradient} ${t.primaryAction.hover} ${t.primaryAction.text} ${t.primaryAction.shadow}`}
-                                title="Ajouter un jeu"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden md:inline font-medium">Jeu</span>
-                            </button>
-                        </>
-                    )}
                 </div>
             </div>
         </header>
