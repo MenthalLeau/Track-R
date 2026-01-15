@@ -194,3 +194,55 @@ export const deleteGame = async (id: number): Promise<void> => {
         throw new Error(error.message);
     }
 }
+
+export const linkGameToUser = async (gid: number, uid: string): Promise<void> => {
+    const { error } = await supabase
+        .from('usergame')
+        .insert([{ gid, uid }]);
+        
+    if (error) {
+        throw new Error(error.message);
+    }
+}
+
+export const unlinkGameFromUser = async (gid: number, uid: string): Promise<void> => {
+    const { error } = await supabase
+        .from('usergame')
+        .delete()
+        .eq('gid', gid)
+        .eq('uid', uid);
+        
+    if (error) {
+        throw new Error(error.message);
+    }
+}
+
+export const isGameLinkedToUser = async (gid: number, uid: string): Promise<boolean> => {
+    const { data, error } = await supabase
+        .from('usergame')
+        .select('*')
+        .eq('gid', gid)
+        .eq('uid', uid)
+        .single();
+        
+    if (error) {
+        if (error.code === 'PGRST116') {
+            // Pas de ligne trouvée
+            return false;
+        }
+        throw new Error(error.message);
+    }
+    return !!data;
+}
+
+export const fetchUserFollowedGamesIds = async (uid: string): Promise<number[]> => {
+    const { data, error } = await supabase
+        .from('usergame')
+        .select('gid')
+        .eq('uid', uid);
+        
+    if (error) throw new Error(error.message);
+    
+    // On retourne juste un tableau simple : [1, 15, 23...]
+    return (data || []).map((row: any) => row.gid);
+}
