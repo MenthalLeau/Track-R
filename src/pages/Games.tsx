@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import { Gamepad2, Plus, Edit2, Trash2, X, Star, Trophy } from 'lucide-react';
-import { createGame, updateGame, deleteGame, type Game, fetchALLGamesWithConsole } from "../http/game";
+import { Gamepad2, Plus, Edit2, Trash2, X, Star, Trophy, Heart } from 'lucide-react';
+import { createGame, updateGame, deleteGame, type Game, fetchALLGamesWithConsole, fetchUserFollowedGamesIds, unlinkGameFromUser, linkGameToUser } from "../http/game";
 import { GenericAdminForm } from "./GenericAdminForm";
 import { useAuth } from "../context/AuthContext";
 import { getThemeTokens } from "../components/theme";
@@ -18,13 +18,20 @@ export default function Games() {
     const [isEditing, setIsEditing] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
 
-    const { profile } = useAuth();
+    const [followedGameIds, setFollowedGameIds] = useState<number[]>([]); // Pour les jeux suivis
+
+    const { profile, user } = useAuth();
     const isAdmin = profile && profile.rid === 2;
 
     const loadGames = async () => {
         try {
             const data = await fetchALLGamesWithConsole();
             setGames(data);
+
+            if (user) {
+                const ids = await fetchUserFollowedGamesIds(user.id);
+                setFollowedGameIds(ids);
+            }
         } catch (error) {
             console.error("Erreur chargement jeux:", error);
         }
@@ -35,6 +42,30 @@ export default function Games() {
     }, []);
 
     // --- HANDLERS ---
+
+    const handleToggleFollow = async (gameId: number) => {
+        if (!user) return;
+
+        const isFollowed = followedGameIds.includes(gameId);
+
+        try {
+            if (isFollowed) {
+                // Unfollow
+                const confirm = window.confirm("Voulez-vous arrêter de suivre ce jeu ?");
+                if (!confirm) return;
+
+                await unlinkGameFromUser(gameId, user.id);
+                setFollowedGameIds(prev => prev.filter(id => id !== gameId));
+            } else {
+                // Follow
+                await linkGameToUser(gameId, user.id);
+                setFollowedGameIds(prev => [...prev, gameId]);
+            }
+        } catch (error) {
+            console.error("Erreur suivi/désuivi:", error);
+            alert("Une erreur est survenue lors de la mise à jour du suivi.");
+        }
+    };
 
     const handleDelete = async (id: number) => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer ce jeu ?")) {
@@ -247,6 +278,32 @@ export default function Games() {
                                 </div>
 
                                 <div className="flex gap-4">
+                                    {(() => {
+                                        const isFollowed = followedGameIds.includes(selectedGame.id);
+                                        return (
+                                            <button
+                                                onClick={() => handleToggleFollow(selectedGame.id)}
+                                                className={`flex-1 px-6 py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 font-bold ${
+                                                    isFollowed
+                                                        ? "bg-red-500 text-white hover:bg-red-600 shadow-red-500/30" // Rouge si suivi
+                                                        : "bg-blue-500 text-white hover:bg-blue-600 shadow-blue-500/30" // Bleu sinon
+                                                }`}
+                                            >
+                                                {isFollowed ? (
+                                                    <>
+                                                        <X className="w-5 h-5" />
+                                                        Retirer
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Heart className="w-5 h-5" />
+                                                        Suivre ce jeu
+                                                    </>
+                                                )}
+                                            </button>
+                                        );
+                                    })()}
+
                                     <button
                                         onClick={() => setSelectedGame(null)}
                                         className={`flex-1 px-6 py-3 rounded-xl shadow-lg transition-all ${t.primaryAction.bgGradient} ${t.primaryAction.text} ${t.primaryAction.shadow} ${t.primaryAction.hover}`}
