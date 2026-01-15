@@ -196,7 +196,7 @@ export const deleteGame = async (id: number): Promise<void> => {
 }
 
 export const linkGameToUser = async (gid: number, uid: string): Promise<void> => {
-    const { data, error } = await supabase
+    const { error } = await supabase
         .from('usergame')
         .insert([{ gid, uid }]);
         
