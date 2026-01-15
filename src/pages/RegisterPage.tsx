@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 import { getThemeTokens } from '../components/theme';
 import type { Theme } from '../components/theme';
 
@@ -22,15 +23,15 @@ export default function RegisterPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false); // Pour l'écran "Vérifiez vos emails"
 
     // Helper : Traduction des erreurs Supabase
     const translateError = (message: string) => {
         const msg = message.toLowerCase();
-        if (msg.includes("password should be at least")) return "Le mot de passe doit contenir au moins 6 caractères.";
-        if (msg.includes("user already registered")) return "Cette adresse email est déjà utilisée.";
-        if (msg.includes("invalid format") || msg.includes("email address")) return "L'adresse email n'est pas valide.";
-        if (msg.includes("rate limit exceeded")) return "Trop de tentatives. Veuillez réessayer plus tard.";
-        if (msg.includes("signup is disabled")) return "Les inscriptions sont actuellement désactivées.";
+        if (msg.includes("password")) return "Le mot de passe doit être plus complexe (6 caractères min).";
+        if (msg.includes("already registered")) return "Cette adresse email est déjà utilisée.";
+        if (msg.includes("rate limit")) return "Trop de tentatives, veuillez patienter.";
+        if (msg.includes("invalid format") || msg.includes("email")) return "Format d'email invalide.";
         return "Une erreur est survenue lors de l'inscription.";
     };
 
@@ -39,13 +40,12 @@ export default function RegisterPage() {
         e.preventDefault();
         setError(null);
 
-        // 1. Vérification des champs vides
+        // 1. Validation des champs
         if (!nickname || !email || !password) {
             setError('Veuillez remplir tous les champs');
             return;
         }
 
-        // 2. Validation stricte de l'email (Regex)
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             setError("L'adresse email doit avoir un format valide (ex: exemple@test.fr)");
@@ -54,8 +54,20 @@ export default function RegisterPage() {
 
         setLoading(true);
         try {
+            // 2. Inscription
             await signUp(nickname, email, password);
-            navigate('/login'); // Redirection vers le login après succès (ou confirmation email)
+
+            // 3. Vérification de la session active
+            // Si Supabase renvoie une session, l'email est auto-confirmé (ou pas de confirmation requise).
+            // Sinon, l'utilisateur doit confirmer son email.
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session) {
+                navigate('/'); // Accès direct
+            } else {
+                setIsSuccess(true); // Affichage écran confirmation
+            }
+
         } catch (err: any) {
             console.error(err);
             const translatedMsg = translateError(err.message || "");
@@ -65,10 +77,44 @@ export default function RegisterPage() {
         }
     };
 
+    // --- RENDU : ÉCRAN DE SUCCÈS (CONFIRMATION EMAIL) ---
+    if (isSuccess) {
+        return (
+            <div className="flex items-center justify-center min-h-[80vh] transition-colors duration-500">
+                <div className={`w-full max-w-md backdrop-blur-2xl rounded-3xl p-10 shadow-2xl text-center transition-all duration-300 ${t.layout.bg} ${t.layout.border} ${t.layout.shadow}`}>
+
+                    <div className="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in duration-300">
+                        <CheckCircle2 className="w-10 h-10" />
+                    </div>
+
+                    <h2 className={`text-2xl font-bold mb-4 ${t.text.main}`}>Vérifiez vos emails</h2>
+
+                    <p className={`mb-6 text-sm ${t.text.muted}`}>
+                        Un lien de confirmation a été envoyé à :<br/>
+                        <span className={`font-semibold text-base block mt-1 ${t.text.main}`}>{email}</span>
+                    </p>
+
+                    <div className={`text-sm p-4 rounded-xl mb-8 text-left bg-purple-500/5 border border-purple-500/10 ${t.text.muted}`}>
+                        <p className="flex gap-2">
+                            <span>ℹ️</span>
+                            <span>Cliquez sur le lien reçu pour activer votre compte. Vérifiez vos spams si nécessaire.</span>
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => navigate('/login')}
+                        className={`w-full py-4 rounded-xl font-medium transition-all ${t.primaryAction.bgGradient} ${t.primaryAction.text} ${t.primaryAction.shadow} ${t.primaryAction.hover}`}
+                    >
+                        Retour à la connexion
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // --- RENDU : FORMULAIRE D'INSCRIPTION ---
     return (
         <div className="flex items-center justify-center min-h-[80vh] transition-colors duration-500">
-
-            {/* --- CARTE D'INSCRIPTION --- */}
             <div className={`w-full max-w-md backdrop-blur-2xl rounded-3xl p-10 shadow-2xl transition-all duration-300 ${t.layout.bg} ${t.layout.border} ${t.layout.shadow}`}>
 
                 {/* 1. Logo & En-tête */}
@@ -79,17 +125,12 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="text-center mb-8">
-                    <h1 className={`text-3xl font-bold mb-2 ${t.text.main}`}>
-                        Créer un compte
-                    </h1>
-                    <p className={`text-sm ${t.text.muted}`}>
-                        Rejoignez la communauté Track-R
-                    </p>
+                    <h1 className={`text-3xl font-bold mb-2 ${t.text.main}`}>Créer un compte</h1>
+                    <p className={`text-sm ${t.text.muted}`}>Rejoignez la communauté Track-R</p>
                 </div>
 
                 {/* 2. Formulaire */}
                 <form onSubmit={handleSubmit} className="space-y-5">
-
                     {/* Message d'erreur */}
                     {error && (
                         <div className={`p-4 rounded-xl text-sm ${t.error.bg} ${t.error.border} ${t.error.text}`}>
@@ -99,9 +140,7 @@ export default function RegisterPage() {
 
                     {/* Champ Pseudo */}
                     <div>
-                        <label htmlFor="nickname" className={`block text-sm mb-2 font-medium ${t.text.inactive}`}>
-                            Pseudo
-                        </label>
+                        <label htmlFor="nickname" className={`block text-sm mb-2 font-medium ${t.text.inactive}`}>Pseudo</label>
                         <div className="relative">
                             <User className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10 ${t.text.muted}`} />
                             <input
@@ -120,9 +159,7 @@ export default function RegisterPage() {
 
                     {/* Champ Email */}
                     <div>
-                        <label htmlFor="email" className={`block text-sm mb-2 font-medium ${t.text.inactive}`}>
-                            Adresse email
-                        </label>
+                        <label htmlFor="email" className={`block text-sm mb-2 font-medium ${t.text.inactive}`}>Adresse email</label>
                         <div className="relative">
                             <Mail className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10 ${t.text.muted}`} />
                             <input
@@ -141,9 +178,7 @@ export default function RegisterPage() {
 
                     {/* Champ Mot de passe */}
                     <div>
-                        <label htmlFor="password" className={`block text-sm mb-2 font-medium ${t.text.inactive}`}>
-                            Mot de passe
-                        </label>
+                        <label htmlFor="password" className={`block text-sm mb-2 font-medium ${t.text.inactive}`}>Mot de passe</label>
                         <div className="relative">
                             <Lock className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10 ${t.text.muted}`} />
                             <input
@@ -186,9 +221,7 @@ export default function RegisterPage() {
                         <div className={`w-full border-t ${t.layout.border}`}></div>
                     </div>
                     <div className="relative flex justify-center">
-                        <span className={`px-4 text-sm ${t.layout.bg} ${t.text.muted}`}>
-                          ou
-                        </span>
+                        <span className={`px-4 text-sm ${t.layout.bg} ${t.text.muted}`}>ou</span>
                     </div>
                 </div>
 
