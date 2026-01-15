@@ -53,6 +53,11 @@ export type ThemeTokens = {
         border: string;
         text: string;
     };
+    success: {
+        bg: string;
+        border: string;
+        text: string;
+    };
 };
 
 export const tokens: Record<Theme, ThemeTokens> = {
@@ -108,6 +113,11 @@ export const tokens: Record<Theme, ThemeTokens> = {
             bg: "bg-red-500/20 border",
             border: "border-red-500/30",
             text: "text-red-300",
+        },
+        success: {
+            bg: "bg-green-500/20 border",
+            border: "border-green-500/30",
+            text: "text-green-500",
         }
     },
     light: {
@@ -162,6 +172,11 @@ export const tokens: Record<Theme, ThemeTokens> = {
             bg: "bg-red-50 border",
             border: "border-red-200",
             text: "text-red-700",
+        },
+        success: {
+            bg: "bg-green-50 border",
+            border: "border-green-200",
+            text: "text-green-700",
         }
     },
 };

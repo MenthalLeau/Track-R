@@ -6,7 +6,7 @@ export interface Achievement {
     name: string;
     description: string;
     game: Game;
-    gid?: number; // Ajout optionnel pour le typage, car le formulaire envoie 'gid'
+    gid?: number;
 }
 
 export const fetchAchievements = async (): Promise<Achievement[]> => {
@@ -25,7 +25,7 @@ export const fetchAchievements = async (): Promise<Achievement[]> => {
                 image_url
             )
         `);
-        // J'ai ajouté 'gid' dans le select ci-dessus pour qu'on l'ait toujours dispo
+
         
     if (error) {
         throw new Error(error.message);
@@ -70,7 +70,6 @@ export const fetchAchievementById = async (id: number): Promise<Achievement | nu
     return achievement;
 }
 
-// --- CORRECTION ICI ---
 export const createAchievement = async (achievement: any): Promise<Achievement> => {
     // 1. On crée une copie pour ne pas modifier l'objet original de l'UI
     const payload = { ...achievement };
@@ -94,7 +93,6 @@ export const createAchievement = async (achievement: any): Promise<Achievement> 
     return data;
 }
 
-// --- CORRECTION ICI ---
 export const updateAchievement = async (id: number, achievement: Partial<Achievement>): Promise<Achievement> => {
     // 1. On crée une copie
     const payload: any = { ...achievement };
