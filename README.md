@@ -1,73 +1,71 @@
-# React + TypeScript + Vite
+# Track-R
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Track-R est une Progressive Web App (PWA) moderne conçue pour les passionnés de jeux vidéo. Elle permet de suivre sa bibliothèque de jeux, de gérer sa progression (succès, temps de jeu) et de consulter les profils d'autres joueurs, le tout synchronisé en temps réel via Supabase.
 
-Currently, two official plugins are available:
+## Installation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Prérequis
+- **Node.js** version 18 ou supérieure
+- **npm** (inclus avec Node.js) ou **yarn**
+- Un compte **Supabase** pour la base de données et l'authentification
 
-## React Compiler
+### Lancement en local
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Cloner le projet**
 
-## Expanding the ESLint configuration
+   Récupérez le code source sur votre machine :
+   ```bash
+   git clone [https://github.com/votre-utilisateur/track-r.git](https://github.com/votre-utilisateur/track-r.git)
+   cd track-r
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. **Installer les dépendances**
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+   Installez les paquets nécessaires au fonctionnement de l'application :
+   ```Bash
+   npm install
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+4. **Configurer les variables d'environnement**
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+   Créez un fichier .env.local à la racine du projet et ajoutez-y vos clés Supabase (disponibles dans Project Settings > API) :
+    ```Extrait de code
+    VITE_SUPABASE_URL=votre_url_supabase
+    VITE_SUPABASE_ANON_KEY=votre_cle_anon_publique
+    ```
+
+5. **Lancer le serveur de développement**
+
+   Démarrez l'application en mode local :
+   ```Bash
+   npm run dev
+   ```
+   L'application sera accessible à l'adresse : http://localhost:5173
+
+### Structure du projet
+
+Voici l'organisation des fichiers sources de l'application :
+```
+src/
+├── components/          # Composants réutilisables
+│   ├── layout/          # Composants de structure (Sidebar, TopBar)
+│   └── ...              # Autres composants UI (boutons, cartes...)
+├── context/             # Contextes React (AuthContext pour la gestion utilisateur)
+├── http/                # Fonctions d'appel API vers Supabase (game.ts, user.ts...)
+├── lib/                 # Configuration des clients externes (supabaseClient.ts)
+├── pages/               # Pages principales de l'application
+│   ├── Dashboard.tsx    # Tableau de bord utilisateur
+│   ├── Games.tsx        # Bibliothèque de jeux
+│   ├── Players.tsx      # Liste et recherche des joueurs
+│   ├── LoginPage.tsx    # Page de connexion
+│   └── RegisterPage.tsx # Page d'inscription
+├── utils/               # Utilitaires et constantes
+│   └── theme.ts         # Configuration des thèmes (Dark/Light) et tokens de design
+├── App.tsx              # Point d'entrée et configuration du routing
+└── main.tsx             # Montage de l'application React
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Auteur(s)
+**artaLeau**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Composée de Christian RZESZUTEK et Erwann QUEVIT
