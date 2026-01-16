@@ -6,6 +6,7 @@ import { GenericAdminForm } from "./GenericAdminForm";
 import { useAuth } from "../context/AuthContext";
 import { getThemeTokens } from "../components/theme";
 import type { Theme } from "../components/theme";
+import { fetchAchievementsForGame, type Achievement } from "../http/achievement";
 
 
 export default function Games() {
@@ -15,6 +16,7 @@ export default function Games() {
 
     const [games, setGames] = useState<Game[]>([]);
     const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+    const [achievementsForSelectedGame, setAchievementsForSelectedGame] = useState<Omit<Achievement, 'game'>[]>([]);
     const [isEditing, setIsEditing] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
 
@@ -36,6 +38,17 @@ export default function Games() {
             console.error("Erreur chargement jeux:", error);
         }
     };
+
+    useEffect(() => {
+        const funGetAchievements = async () => {
+            if (selectedGame) {
+                const res = await fetchAchievementsForGame(selectedGame.id);
+                setAchievementsForSelectedGame(res);
+            }
+        };
+        funGetAchievements();
+    }, [selectedGame]);
+
 
     useEffect(() => {
         loadGames();
@@ -259,22 +272,21 @@ export default function Games() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 mb-6">
-                                    <h4 className={`text-xl ${t.text.main}`}>Succès exemple</h4>
-                                    {[1, 2, 3].map((i) => (
-                                        <div
-                                            key={i}
-                                            className={`rounded-2xl p-4 flex items-center gap-4 border shadow-sm ${t.layout.bg} ${t.layout.border}`}
-                                        >
-                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${t.cover.bgGradient}`}>
-                                                <Star className="w-6 h-6 text-white/70" />
+                                <h4 className={`text-xl mb-4 ${t.text.main}`}>Succès</h4>
+                                <div className="space-y-3 mb-6 overflow-y-auto max-h-64">
+                                    {achievementsForSelectedGame.length === 0 ? (
+                                        <p className={`${t.text.muted}`}>Aucun succès disponible pour ce jeu.</p>
+                                    ) : (
+                                        achievementsForSelectedGame.map((ach) => (
+                                            <div key={ach.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                                                <Star className={`w-8 h-8 ${t.text.highlight}`} />
+                                                <div>
+                                                    <h5 className={`font-semibold ${t.text.main}`}>{ach.name}</h5>
+                                                    <p className={`text-sm ${t.text.inactive}`}>{ach.description}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h5 className={`${t.text.main}`}>Succès {i}</h5>
-                                                <p className={`text-sm ${t.text.muted}`}>Complétez une mission</p>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        ))
+                                    )}
                                 </div>
 
                                 <div className="flex gap-4">

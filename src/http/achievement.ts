@@ -126,3 +126,26 @@ export const deleteAchievement = async (id: number): Promise<void> => {
         throw new Error(error.message);
     }
 }
+
+export const fetchAchievementsForGame = async (gid: number): Promise<Omit<Achievement, 'game'>[]> => {
+    const { data, error } = await supabase
+        .from('achievement')
+        .select(`
+            id,
+            name,
+            description,
+            gid,
+            game:gid (
+                id,
+                name,
+                description
+            )
+        `)
+        .eq('gid', gid);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    return data || [];
+}
