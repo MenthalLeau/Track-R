@@ -6,7 +6,7 @@ import { GenericAdminForm } from "./GenericAdminForm";
 import { useAuth } from "../context/AuthContext";
 import { getThemeTokens } from "../components/theme";
 import type { Theme } from "../components/theme";
-import { fetchAchievementsForGame, type Achievement } from "../http/achievement";
+import { fetchAchievementsForGame, fetchUserUnlockedAchievementsIds, linkAchievementToUser, unlinkAchievementFromUser, type Achievement } from "../http/achievement";
 
 
 export default function Games() {
@@ -21,6 +21,7 @@ export default function Games() {
     const [isCreating, setIsCreating] = useState(false);
 
     const [followedGameIds, setFollowedGameIds] = useState<number[]>([]); // Pour les jeux suivis
+    const [followedAchievementsIds, setFollowedAchievementsIds] = useState<number[]>([]); // Pour les succès suivis
 
     const { profile, user } = useAuth();
     const isAdmin = profile && profile.rid === 2;
@@ -33,6 +34,8 @@ export default function Games() {
             if (user) {
                 const ids = await fetchUserFollowedGamesIds(user.id);
                 setFollowedGameIds(ids);
+                const achIds = await fetchUserUnlockedAchievementsIds(user.id);
+                setFollowedAchievementsIds(achIds);
             }
         } catch (error) {
             console.error("Erreur chargement jeux:", error);
@@ -79,6 +82,27 @@ export default function Games() {
             alert("Une erreur est survenue lors de la mise à jour du suivi.");
         }
     };
+
+    const handleToggleFollowAchievement = async (achievementId: number) => {
+        if (!user) return;
+
+        const isFollowed = followedAchievementsIds.includes(achievementId);
+
+        try {
+            if (isFollowed) {
+
+                await unlinkAchievementFromUser(user.id, achievementId);
+                setFollowedAchievementsIds(prev => prev.filter(id => id !== achievementId));
+            } else {
+                // Follow
+                await linkAchievementToUser(user.id, achievementId);
+                setFollowedAchievementsIds(prev => [...prev, achievementId]);
+            }
+        } catch (error) {
+            console.error("Erreur suivi/désuivi succès:", error);
+            alert("Une erreur est survenue lors de la mise à jour du suivi du succès.");
+        }
+    }
 
     const handleDelete = async (id: number) => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer ce jeu ?")) {
@@ -260,7 +284,7 @@ export default function Games() {
 
                                         <div className={`flex items-center gap-2 ${t.text.highlight}`}>
                                             <Trophy className="w-6 h-6" />
-                                            <span className="text-xl">12 succès disponibles</span>
+                                            <span className="text-xl">{achievementsForSelectedGame.length} succès disponibles</span>
                                         </div>
 
                                         {/* Description */}
@@ -279,7 +303,12 @@ export default function Games() {
                                     ) : (
                                         achievementsForSelectedGame.map((ach) => (
                                             <div key={ach.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                                                <Star className={`w-8 h-8 ${t.text.highlight}`} />
+                                                <div>
+                                                <Star className={`w-6 h-6 text-yellow-400`} fill={followedAchievementsIds.includes(ach.id) ? "yellow" : "none"} onClick={async () => {
+                                                    if (!user) return;
+                                                    await handleToggleFollowAchievement(ach.id);
+                                                }} />
+                                                </div>
                                                 <div>
                                                     <h5 className={`font-semibold ${t.text.main}`}>{ach.name}</h5>
                                                     <p className={`text-sm ${t.text.inactive}`}>{ach.description}</p>
@@ -292,28 +321,31 @@ export default function Games() {
                                 <div className="flex gap-4">
                                     {(() => {
                                         const isFollowed = followedGameIds.includes(selectedGame.id);
-                                        return (
-                                            <button
-                                                onClick={() => handleToggleFollow(selectedGame.id)}
-                                                className={`flex-1 px-6 py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 font-bold ${
-                                                    isFollowed
-                                                        ? "bg-red-500 text-white hover:bg-red-600 shadow-red-500/30" // Rouge si suivi
-                                                        : "bg-blue-500 text-white hover:bg-blue-600 shadow-blue-500/30" // Bleu sinon
-                                                }`}
-                                            >
-                                                {isFollowed ? (
-                                                    <>
-                                                        <X className="w-5 h-5" />
-                                                        Retirer
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Heart className="w-5 h-5" />
-                                                        Suivre ce jeu
-                                                    </>
-                                                )}
-                                            </button>
-                                        );
+                                        if (user) {
+                                            return (
+                                                <button
+                                                    onClick={() => handleToggleFollow(selectedGame.id)}
+                                                    className={`flex-1 px-6 py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 font-bold ${
+                                                        isFollowed
+                                                            ? "bg-red-500 text-white hover:bg-red-600 shadow-red-500/30" // Rouge si suivi
+                                                            : "bg-blue-500 text-white hover:bg-blue-600 shadow-blue-500/30" // Bleu sinon
+                                                    }`}
+                                                >
+                                                    {isFollowed ? (
+                                                        <>
+                                                            <X className="w-5 h-5" />
+                                                            Retirer
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Heart className="w-5 h-5" />
+                                                            Suivre ce jeu
+                                                        </>
+                                                    )}
+                                                </button>
+                                            );
+                                        }
+                                        return null;
                                     })()}
 
                                     <button
