@@ -27,7 +27,7 @@ export default function Layout() {
 
             <Sidebar theme={theme} />
 
-            <div className="ml-64 flex flex-col min-h-screen transition-all duration-300">
+            <div className="lg:ml-64 flex flex-col min-h-screen transition-all duration-300">
                 <TopBar
                     theme={theme}
                     onToggleTheme={toggleTheme}
@@ -35,9 +35,9 @@ export default function Layout() {
                     onSearchChange={setSearchQuery}
                 />
 
-                <main className="flex-1 p-8">
+                <div className="flex-1 p-8">
                     <Outlet context={{ theme, searchQuery }} />
-                </main>
+                </div>
             </div>
         </div>
     );
