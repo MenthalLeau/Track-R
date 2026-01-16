@@ -54,8 +54,6 @@ export default function Dashboard() {
 
     // Calculs globaux basés sur les données réelles
     const totalGames = gameLinkedToUser.length;
-    // On compte le nombre total de succès "possibles" (somme de tous les achievements des jeux)
-    const totalPossibleAchievements = gameLinkedToUser.reduce((acc, game) => acc + (game.achievements?.length || 0), 0);
     // On compte ceux que l'utilisateur a réellement (longueur du tableau d'IDs suivis)
     const totalUnlockedAchievements = followedAchievementsIds.length;
 
