@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
-import { Trophy, Edit, Circle, Gamepad2, ArrowRight } from 'lucide-react';
+import { Trophy, Edit, Gamepad2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getThemeTokens } from '../components/theme';
 import type { Theme } from '../components/theme';
@@ -211,15 +211,6 @@ export default function Dashboard() {
                         </Link>
                     </div>
 
-                    {/* Statut */}
-                    <div className={`rounded-2xl p-4 border shadow-lg ${t.card.base} ${t.card.border}`}>
-                        <div className="flex items-center gap-2 mb-1">
-                            <Circle className="w-3 h-3 fill-green-500 text-green-500 animate-pulse" />
-                            <span className={`${t.text.main} font-medium`}>En ligne</span>
-                        </div>
-                        <p className={`text-sm ${t.text.inactive} ml-5`}>Prêt à jouer</p>
-                    </div>
-
                     {/* Badges */}
                     <div className={`rounded-2xl p-6 border shadow-lg ${t.card.base} ${t.card.border}`}>
                         <h3 className={`font-bold mb-4 ${t.text.main}`}>
@@ -239,12 +230,6 @@ export default function Dashboard() {
                         <Link to="/games" className={`block w-full text-left px-3 py-2 rounded-lg transition-colors hover:bg-purple-500/10 ${t.text.main}`}>
                             Jeux suivis <span className={`${t.text.muted} ml-1`}>{gameProgress.length}</span>
                         </Link>
-                        <button className={`block w-full text-left px-3 py-2 rounded-lg transition-colors hover:bg-purple-500/10 ${t.text.main}`}>
-                            Inventaire
-                        </button>
-                        <button className={`block w-full text-left px-3 py-2 rounded-lg transition-colors hover:bg-purple-500/10 ${t.text.main}`}>
-                            Captures d'écran
-                        </button>
                     </div>
 
                 </div>
