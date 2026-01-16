@@ -149,3 +149,56 @@ export const fetchAchievementsForGame = async (gid: number): Promise<Omit<Achiev
 
     return data || [];
 }
+
+export const linkAchievementToUser = async (uid: string, aid: number): Promise<void> => {
+    const { error } = await supabase
+        .from('userachievement')
+        .insert([{ uid, aid }]);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+}
+
+export const unlinkAchievementFromUser = async (uid: string, aid: number): Promise<void> => {
+    const { error } = await supabase
+        .from('userachievement')
+        .delete()
+        .eq('uid', uid)
+        .eq('aid', aid);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+}
+
+export const isAchievementLinkedToUser = async (uid: string, aid: number): Promise<boolean> => {
+    const { data, error } = await supabase
+        .from('userachievement')
+        .select('*')
+        .eq('uid', uid)
+        .eq('aid', aid)
+        .single();
+
+    if (error) {
+        if (error.code === 'PGRST116') {
+            // Pas de ligne trouvée
+            return false;
+        }
+        throw new Error(error.message);
+    }
+    return !!data;
+}
+
+export const fetchUserUnlockedAchievementsIds = async (uid: string): Promise<number[]> => {
+    const { data, error } = await supabase
+        .from('userachievement')
+        .select('aid')
+        .eq('uid', uid);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    return (data || []).map(item => item.aid);
+}
