@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { getThemeTokens } from '../components/theme';
 import type { Theme } from '../components/theme';
+import { signInWithGoogle } from '../http/user';
 
 export default function RegisterPage() {
     // --- 1. CONFIGURATION DU THÈME ---
@@ -214,6 +215,10 @@ export default function RegisterPage() {
                         )}
                     </button>
                 </form>
+
+                <button onClick={signInWithGoogle} className={`w-full mt-4 flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all ${t.input.bg} ${t.input.border} ${t.text.main} hover:${t.input.focusBg} shadow-sm`}>
+                    <span>Se connecter avec Google</span>
+                </button>
 
                 {/* 3. Pied de carte (Divider + Lien Login) */}
                 <div className="relative my-8">

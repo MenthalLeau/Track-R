@@ -5,6 +5,7 @@ import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getThemeTokens } from '../components/theme';
 import type { Theme } from '../components/theme';
+import { signInWithGoogle } from '../http/user';
 
 export default function LoginPage() {
     // --- 1. CONFIGURATION DU THÈME ---
@@ -153,6 +154,10 @@ export default function LoginPage() {
                     </button>
                 </form>
 
+                <button onClick={signInWithGoogle} className={`w-full mt-4 flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all ${t.input.bg} ${t.input.border} ${t.text.main} hover:${t.input.focusBg} shadow-sm`}>
+                    <span>Se connecter avec Google</span>
+                </button>
+
                 {/* 3. Pied de page (Divider + Lien inscription) */}
                 <div className="relative my-8">
                     <div className="absolute inset-0 flex items-center opacity-30">
@@ -162,6 +167,8 @@ export default function LoginPage() {
                         <span className={`px-4 text-sm ${t.layout.bg} ${t.text.muted}`}>ou</span>
                     </div>
                 </div>
+
+
 
                 <div className="text-center">
                     <p className={`text-sm ${t.text.inactive}`}>

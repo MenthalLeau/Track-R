@@ -209,3 +209,17 @@ export const fetchUserUnlockedAchievementsIds = async (uid: string): Promise<num
 
     return (data || []).map(ua => ua.aid);
 }
+
+export const signInWithGoogle = async () => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: 'http://localhost:3000/dashboard', // Redirection après login
+    },
+  })
+    if (error) {
+        console.error('Error during Google sign-in:', error);
+    }   
+
+    return data;
+}

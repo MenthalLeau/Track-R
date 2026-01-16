@@ -167,7 +167,7 @@ export default function Games() {
                 /* Grid des Jeux */
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                     {games.map((game) => (
-                        <div
+                        <button
                             key={game.id}
                             onClick={() => {
                                 setSelectedGame(game);
@@ -203,7 +203,7 @@ export default function Games() {
                                     </span>
                                 </div>
                             </div>
-                        </div>
+                        </button>
                     ))}
                 </div>
             )}
