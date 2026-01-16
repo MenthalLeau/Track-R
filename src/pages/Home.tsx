@@ -21,11 +21,11 @@ export default function Home() {
     const currentTheme: Theme = context?.theme || (localStorage.getItem('trackr-theme') as Theme) || 'dark';
     const t = getThemeTokens(currentTheme);
 
-    // --- 2. LOGIQUE MÉTIER (STRICTEMENT CONSERVÉE) ---
+    // --- 2. LOGIQUE MÉTIER ---
     const [bestUsers, setBestUsers] = useState<User[]>([]);
     const [bestGames, setBestGames] = useState<Game[]>([]);
     const [latestConsoles, setLatestConsoles] = useState<GameConsole[]>([]);
-    const [loading, setLoading] = useState(true); // Ajout d'un état de chargement pour l'UX
+    const [loading, setLoading] = useState(true); 
 
     useEffect(() => {
         const loadAllData = async () => {

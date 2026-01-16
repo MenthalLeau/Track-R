@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient'; // (Note: .ts extension souvent pas nécessaire dans l'import selon config)
+import { supabase } from '../lib/supabaseClient';
 import type { Game } from './game';
 
 export interface Achievement {
@@ -79,8 +79,6 @@ export const createAchievement = async (achievement: any): Promise<Achievement> 
     // 3. On supprime l'ID s'il est présent (la BDD le gère)
     delete payload.id;
 
-    // Le payload contient maintenant { name, description, gid } -> C'est propre !
-
     const { data, error } = await supabase
         .from('achievement')
         .insert(payload)
@@ -97,7 +95,7 @@ export const updateAchievement = async (id: number, achievement: Partial<Achieve
     // 1. On crée une copie
     const payload: any = { ...achievement };
 
-    // 2. On supprime la relation imbriquée qui cause le crash
+    // 2. On supprime la relation imbriquée 
     delete payload.game;
     
     // 3. On supprime l'ID du payload (puisqu'on l'utilise déjà dans .eq('id', id))

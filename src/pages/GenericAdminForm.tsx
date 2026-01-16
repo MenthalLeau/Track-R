@@ -148,10 +148,8 @@ export const GenericAdminForm: React.FC<Props> = ({ fields, initialData, foreign
                                     id={field.name}
                                     className={inputClasses}
                                     multiple
-                                    // CORRECTIF ICI : On convertit les IDs (nombres) en strings pour l'affichage React
                                     value={Array.isArray(safeValue) ? safeValue.map((v: any) => String(v)) : []}
                                     onChange={(e) => {
-                                        // Ici c'est bon : on récupère les strings du DOM et on les reconvertit en nombres pour ton state
                                         const selectedOptions = Array.from(e.target.selectedOptions).map(option => Number(option.value));
                                         handleChange(field.name, selectedOptions);
                                     }}
