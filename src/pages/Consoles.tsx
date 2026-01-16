@@ -99,7 +99,7 @@ export default function Consoles() {
                 /* Grid des Consoles */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {consoles.map((consoleItem) => (
-                        <div
+                        <button
                             key={consoleItem.id}
                             onClick={() => {
                                 setSelectedConsole(consoleItem);
@@ -138,7 +138,7 @@ export default function Consoles() {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </button>
                     ))}
                 </div>
             )}
