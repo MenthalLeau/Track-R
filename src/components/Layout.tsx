@@ -27,7 +27,7 @@ export default function Layout() {
 
             <Sidebar theme={theme} />
 
-            <div className="ml-64 flex flex-col min-h-screen transition-all duration-300">
+            <div className="lg:ml-64 flex flex-col min-h-screen transition-all duration-300">
                 <TopBar
                     theme={theme}
                     onToggleTheme={toggleTheme}

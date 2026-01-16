@@ -158,6 +158,45 @@ export const fetchAllUsersQuery = async (query: string, orderValue: number): Pro
     return [];
 }
 
+export const fetchUsersWithMostFollowedAchievements = async (limit: number): Promise<User[]> => {
+    const { data, error } = await supabase
+        .from('profile')
+        .select('uid, email, nickname, created_at, rid')
+        .limit(limit);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    if (data) {
+        // recuperer les jeux suivis et les achievements suivis pour chaque utilisateur
+        const count = await Promise.all(data.map(async (user) => {
+            const { count: achievementsCount } = await supabase
+                .from('userachievement')
+                .select('*', { count: 'exact', head: true })
+                .eq('uid', user.uid);
+
+            return {
+                ...user,
+                countFollowedAchievements: achievementsCount || 0
+            };
+        }));
+
+        // trier par nombre de succès suivis
+        count.sort((a, b) => (b.countFollowedAchievements || 0) - (a.countFollowedAchievements || 0));
+
+        return count.map(user => ({
+            id: user.uid,
+            email: user.email,
+            nickname: user.nickname,
+            created_at: user.created_at,
+            countFollowedAchievements: user.countFollowedAchievements
+        }));
+    }
+
+    return [];
+}
+
 export const fetchUserUnlockedAchievementsIds = async (uid: string): Promise<number[]> => {
     const { data, error } = await supabase
         .from('userachievement')

@@ -20,6 +20,18 @@ export const fetchConsoles = async (): Promise<GameConsole[]> => {
     return data || [];
 }
 
+export const fetchConsolesByDate = async (): Promise<GameConsole[]> => {
+    const { data, error } = await supabase
+        .from('console')
+        .select('id, name, brand, release_year, description, image_url')
+        .order('release_year', { ascending: false });
+        
+    if (error) {
+        throw new Error(error.message);
+    }
+    return data || [];
+}
+
 export const fetchConsoleById = async (id: number): Promise<GameConsole | null> => {
     const { data, error } = await supabase
         .from('console')

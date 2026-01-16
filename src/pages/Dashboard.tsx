@@ -28,11 +28,9 @@ export default function Dashboard() {
         const loadData = async () => {
             setLoading(true);
             try {
-                // On récupère les jeux UNE seule fois
                 const games = await fetchGamesLinkedToUserWithAllAchievements(user.id);
                 setGameLinkedToUser(games);
 
-                // On extrait les IDs des succès (selon ta logique : présent dans la liste = réalisé)
                 const achievementIds = await fetchUserUnlockedAchievementsIds(user.id);
                 setFollowedAchievementsIds(achievementIds);
             } catch (error) {

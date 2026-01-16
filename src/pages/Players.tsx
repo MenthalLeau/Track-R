@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { User as UserIcon, Trophy, Gamepad2, Star, Medal, Crown, Search as SearchIcon } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
-import { fetchAllUsers, fetchAllUsersQuery, type User } from '../http/user'; // Vérifie le chemin
+import { fetchAllUsers, fetchAllUsersQuery, type User } from '../http/user'; 
 import { getThemeTokens, type Theme } from '../components/theme';
 
 export default function Players() {
@@ -12,12 +12,15 @@ export default function Players() {
     const currentTheme: Theme = context?.theme || (localStorage.getItem('trackr-theme') as Theme) || 'dark';
     const t = getThemeTokens(currentTheme);
 
-    // --- 2. LOGIQUE MÉTIER (Votre code original) ---
+    // --- 2. LOGIQUE MÉTIER  ---
     const { user } = useAuth();
+
+    if (!user) {
+        window.location.href = '/login';
+    }
     const [allUsers, setAllUsers] = useState<User[]>([]);
     const [order, setOrder] = useState<number>(1);
 
-    // J'ajoute juste un état pour la barre de recherche (filtre visuel uniquement)
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
@@ -44,8 +47,6 @@ export default function Players() {
     );
 
     // Logique de classement (Podium)
-    // Comme l'API renvoie déjà trié selon 'order', on prend les 3 premiers de la liste filtrée comme "Top"
-    // Sauf si le tri est alphabétique (order 1), auquel cas le podium n'a pas trop de sens, mais on l'affiche quand même.
     const topPlayers = filteredUsers.slice(0, 3);
     
     // Helper pour le badge de rang
@@ -82,7 +83,7 @@ export default function Players() {
                         />
                     </div>
 
-                    {/* Sélecteur de Tri (Lié à votre state 'order') */}
+                    {/* Sélecteur de Tri */}
                     <select
                         id="order"
                         value={order}

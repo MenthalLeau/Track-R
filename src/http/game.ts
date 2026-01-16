@@ -43,7 +43,8 @@ export const fetchALLGamesWithConsole = async (): Promise<Game[]> => {
                     image_url
                 )
             )
-        `);
+        `)
+        .order('name', { ascending: true });
         
     if (error) {
         throw new Error(error.message);
@@ -80,6 +81,34 @@ export const fetchGameById = async (id: number): Promise<Game | null> => {
         throw new Error(error.message);
     }
     return data || null;
+}
+
+export const fetchMostFollowedGames = async (limit: number): Promise<Game[]> => {
+    const { data, error } = await supabase
+        .from('game')
+        .select(`
+            id,
+            name,
+            description,
+            pegi,
+            image_url,
+            followers_count, 
+            followers: usergame (uid) 
+        `)
+        // Ici, on trie sur la colonne virtuelle qu'on vient de créer
+        .order('followers_count', { ascending: false }) 
+        .limit(limit);
+        
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    // Le mapping est simplifié car followers_count arrive déjà calculé
+    return (data || []).map((item: any) => ({
+        ...item,
+        // Si vous voulez garder la structure attendue par votre type Game
+        followersCount: item.followers_count 
+    })) as Game[];
 }
 
 export const uploadGameImage = async (file: File): Promise<string> => {
