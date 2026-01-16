@@ -149,15 +149,22 @@ export default function SettingsPage() {
 
         setLoading(true);
         try {
-            // Note: Nécessite une fonction RPC "delete_user_account" dans Supabase
             const { error } = await supabase.rpc('delete_user_account');
-            if (error) throw error;
-
+            
+            if (error) {
+                console.error("Erreur RPC:", error);
+                throw new Error("Impossible de supprimer le compte.");
+            }
             await signOut();
+
             navigate('/register');
+            
         } catch (err: any) {
-            setMessage({ type: 'error', text: "Erreur lors de la suppression. Contactez le support." });
-            setIsDeleteModalOpen(false);
+            console.error(err);
+            setMessage({ 
+                type: 'error', 
+                text: "Erreur lors de la suppression. Veuillez réessayer ou contacter le support." 
+            });
         } finally {
             setLoading(false);
         }
