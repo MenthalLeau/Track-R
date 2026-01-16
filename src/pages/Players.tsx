@@ -14,6 +14,10 @@ export default function Players() {
 
     // --- 2. LOGIQUE MÉTIER (Votre code original) ---
     const { user } = useAuth();
+
+    if (!user) {
+        window.location.href = '/login';
+    }
     const [allUsers, setAllUsers] = useState<User[]>([]);
     const [order, setOrder] = useState<number>(1);
 
