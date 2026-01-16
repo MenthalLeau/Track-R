@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import type { Achievement } from './achievement';
 import type { GameConsole } from './console';
 
 export interface Game {
@@ -9,6 +10,7 @@ export interface Game {
     image_url?: string;
     consoles?: GameConsole[];
     gameconsoles?: number[];
+    achievements?: Omit<Achievement, 'game'>[];
 }
 
 export const fetchGames = async (): Promise<Game[]> => {
@@ -245,4 +247,49 @@ export const fetchUserFollowedGamesIds = async (uid: string): Promise<number[]> 
     
     // On retourne juste un tableau simple : [1, 15, 23...]
     return (data || []).map((row: any) => row.gid);
+}
+
+export const fetchGamesLinkedToUserWithAllAchievements = async (uid: string): Promise<Game[]> => {
+    const { data, error } = await supabase
+        .from('game')
+        .select(`
+            id,
+            name,
+            description,
+            pegi,
+            image_url,
+            usergame!inner (uid),
+            achievements:achievement (
+                id,
+                name,
+                description,
+                gid
+            ),
+            consoles:gameconsole (
+                console (
+                    id,
+                    name,
+                    brand,
+                    release_year,
+                    description,
+                    image_url
+                )
+            )
+        `)
+        .eq('usergame.uid', uid);
+        
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    // Transformation des données pour "aplatir" la structure des consoles
+    const formattedData = (data || []).map((game: any) => ({
+        ...game,
+        // Supabase renvoie [{ console: {nom: 'PS5'} }], on transforme en [{ nom: 'PS5' }]
+        consoles: game.consoles ? game.consoles.map((gc: any) => gc.console) : [],
+        // Les achievements sont déjà au bon format (1:N), on assure juste le tableau vide
+        achievements: game.achievements || []
+    }));
+
+    return formattedData as Game[];
 }
