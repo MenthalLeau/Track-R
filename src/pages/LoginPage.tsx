@@ -5,7 +5,6 @@ import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getThemeTokens } from '../components/theme';
 import type { Theme } from '../components/theme';
-import { AuthClient } from '@supabase/supabase-js';
 import { signInWithGoogle } from '../http/user';
 
 export default function LoginPage() {
